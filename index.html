@@ -48,19 +48,28 @@ body{
     font-size:28px;
 }
 
-#life{
+#highscore{
+    position:absolute;
     top:55px;
+    left:15px;
+    font-size:24px;
+    color:#cc0000;
+    font-weight:bold;
+}
+
+#life{
+    top:95px;
     font-size:28px;
 }
 
 #combo{
-    top:95px;
+    top:135px;
     font-size:24px;
     color:orange;
 }
 
 #timer{
-    top:135px;
+    top:175px;
     font-size:24px;
     color:#0066cc;
 }
@@ -118,9 +127,17 @@ body{
 
 <h1>🎈 解压打气球挑战赛 🎈</h1>
 
-<input id="playerName" placeholder="请输入让你生气那个人的名字">
+<input id="playerName" placeholder="请输入名字">
 
 <br><br>
+
+<button onclick="confirmName()">
+确认名字
+</button>
+
+<br><br>
+
+<div id="difficultyBox" style="display:none;">
 
 <label>
 <input type="radio" name="mode" value="easy" checked>
@@ -149,7 +166,10 @@ body{
 
 </div>
 
+</div>
+
 <div id="score">得分：0</div>
+<div id="highscore">最高分：0</div>
 <div id="life">❤️❤️❤️❤️❤️</div>
 <div id="combo">连击：0</div>
 <div id="timer">时间：0秒</div>
@@ -162,6 +182,16 @@ body{
 let targetName="";
 
 let score=0;
+
+let highScore =
+parseInt(
+localStorage.getItem("highScore")
+) || 0;
+
+let highScoreName =
+localStorage.getItem("highScoreName")
+|| "暂无";
+
 let combo=0;
 let hits=0;
 let miss=0;
@@ -178,8 +208,32 @@ let gameStarted=false;
 
 const emojis=[
 "😡","🤡","🤮","😴","🙄",
-"😵","🤣","🤯","😜","🥴"
+"😵","🤣","🤯","😜","🥴",
+"👿","😈","💀","🗿","👹",
+"🤬","😤","😾","👺","👻"
 ];
+
+function confirmName(){
+
+    let name =
+    document.getElementById("playerName")
+    .value
+    .trim();
+
+    if(name===""){
+
+        alert("请输入名字");
+
+        return;
+    }
+
+    targetName = name;
+
+    document.getElementById(
+        "difficultyBox"
+    ).style.display="block";
+
+}
 
 function startGame(){
 
@@ -247,14 +301,44 @@ document.addEventListener("mousemove",(e)=>{
 
 function updateUI(){
 
-    scoreDiv.innerHTML="得分："+score;
-    comboDiv.innerHTML="连击："+combo;
-    lifeDiv.innerHTML="❤️".repeat(
-    Math.max(0,life)
+if(score > highScore){
+
+    highScore = score;
+
+    highScoreName = targetName;
+
+    localStorage.setItem(
+        "highScore",
+        highScore
+    );
+
+    localStorage.setItem(
+        "highScoreName",
+        highScoreName
     );
 
 }
 
+    scoreDiv.innerHTML =
+    "得分：" + score;
+
+document.getElementById(
+    "highscore"
+).innerHTML =
+"🏆 " +
+highScoreName +
+"：" +
+highScore;
+
+    comboDiv.innerHTML =
+    "连击：" + combo;
+
+    lifeDiv.innerHTML =
+    "❤️".repeat(
+        Math.max(0,life)
+    );
+
+}
 function floatingText(x,y,text,color){
 
     let t=document.createElement("div");
@@ -478,6 +562,7 @@ setInterval(()=>{
 
 },700);
 
+
 document.addEventListener("click",(e)=>{
 
     if(gameOver) return;
@@ -525,6 +610,12 @@ function endGame(){
     gameover.innerHTML=`
     <h1>🎈 游戏结束 🎈</h1>
     <h2>最终得分：${score}</h2>
+    <h2>
+        🏆 历史最高：
+     ${highScoreName}
+     -
+     ${highScore}
+    </h2>
     <h2>时间：${surviveTime}秒</h2>
     <h2>命中：${hits}</h2>
     <h2>漏掉：${miss}</h2>
@@ -545,6 +636,52 @@ const gun=document.getElementById("gun");
 const gameover=document.getElementById("gameover");
 
 updateUI();
+
+</script>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getDatabase,
+ref,
+set,
+get,
+onValue
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSy......",
+
+authDomain: "jude-balloongame.firebaseapp.com",
+
+databaseURL:
+"https://jude-balloongame-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+projectId: "jude-balloongame",
+
+storageBucket:
+"jude-balloongame.firebasestorage.app",
+
+messagingSenderId:
+"911582853550",
+
+appId:
+"1:911582853550:web:82d33f310af42ae37eb03f"
+
+};
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getDatabase(app);
+
+window.db = db;
 
 </script>
 
