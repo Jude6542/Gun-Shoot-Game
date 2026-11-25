@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEON STRIKE // PROTOCOL OMEGA v3.0</title>
+<title>NEON STRIKE // PROTOCOL OMEGA v3.6</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
-    background: #030408;
+    background: #04060e;
     font-family: 'Rajdhani', "PingFang SC", "Microsoft YaHei", sans-serif;
     user-select: none;
   }
@@ -20,45 +20,43 @@
   #screen-fx {
     position: fixed; inset: 0; pointer-events: none; z-index: 2;
     background:
-      radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.58) 100%),
-      repeating-linear-gradient(0deg, rgba(0, 229, 255, 0.014) 0px, rgba(0, 229, 255, 0.014) 1px, transparent 1px, transparent 3px);
+      radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.5) 100%),
+      repeating-linear-gradient(0deg, rgba(0, 229, 255, 0.012) 0px, rgba(0, 229, 255, 0.012) 1px, transparent 1px, transparent 3px);
   }
 
-  /* ============ 3A 战术瞄准镜 / 狙击镜覆盖层 ============ */
+  /* ============ 战术瞄准镜 / 狙击镜覆盖层 ============ */
   #optic-overlay {
     position: fixed; inset: 0; pointer-events: none; z-index: 4;
     opacity: 0; transition: opacity 0.14s ease-out;
   }
   #optic-overlay.active { opacity: 1; }
 
-  /* 全息准镜（步枪/霰弹） */
   #holo-optic {
     position: absolute; left: 50%; top: 50%; width: 320px; height: 210px;
     transform: translate(-50%, -50%);
     border: 2px solid rgba(0, 229, 255, 0.55);
     border-radius: 22px;
-    box-shadow: 0 0 28px rgba(0, 229, 255, 0.18), inset 0 0 24px rgba(0, 229, 255, 0.08);
-    background: radial-gradient(circle at center, rgba(0, 229, 255, 0.03) 0%, rgba(0, 229, 255, 0.09) 100%);
+    box-shadow: 0 0 24px rgba(0, 229, 255, 0.15), inset 0 0 20px rgba(0, 229, 255, 0.06);
+    background: radial-gradient(circle at center, rgba(0, 229, 255, 0.02) 0%, rgba(0, 229, 255, 0.07) 100%);
   }
   #holo-optic .holo-ring {
     position: absolute; left: 50%; top: 50%; width: 46px; height: 46px;
     transform: translate(-50%, -50%);
     border: 1.5px solid rgba(0, 255, 213, 0.85);
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 255, 213, 0.7);
+    box-shadow: 0 0 8px rgba(0, 255, 213, 0.55);
   }
   #holo-optic .holo-dot {
     position: absolute; left: 50%; top: 50%; width: 5px; height: 5px;
     transform: translate(-50%, -50%);
-    border-radius: 50%; background: #ff2d55; box-shadow: 0 0 10px #ff2d55;
+    border-radius: 50%; background: #ff2d55; box-shadow: 0 0 8px #ff2d55;
   }
   #holo-optic .holo-tag {
     position: absolute; bottom: 8px; right: 14px;
     font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 2px;
-    color: rgba(125, 249, 255, 0.75);
+    color: rgba(125, 249, 255, 0.78);
   }
 
-  /* 高倍狙击镜（狙击枪 ADS） */
   #sniper-optic {
     position: absolute; inset: 0; display: none;
     background: radial-gradient(circle at center,
@@ -73,7 +71,7 @@
     transform: translate(-50%, -50%);
     border-radius: 50%;
     border: 3px solid rgba(0, 229, 255, 0.75);
-    box-shadow: 0 0 35px rgba(0, 229, 255, 0.35), inset 0 0 30px rgba(0, 229, 255, 0.15);
+    box-shadow: 0 0 28px rgba(0, 229, 255, 0.28), inset 0 0 24px rgba(0, 229, 255, 0.12);
   }
   #sniper-optic .axis-h {
     position: absolute; left: 0; right: 0; top: 50%; height: 1px;
@@ -94,7 +92,7 @@
     color: #00e5ff; text-shadow: 0 0 8px #00e5ff;
   }
 
-  /* ============ 3A 战术 HUD ============ */
+  /* ============ 战术 HUD ============ */
   #hud { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s; z-index: 5; }
   #hud.active { opacity: 1; }
 
@@ -124,14 +122,14 @@
   .hud-top {
     position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 32px; align-items: center;
-    background: linear-gradient(180deg, rgba(8, 14, 28, 0.85), rgba(8, 14, 28, 0.3));
-    border-top: 2px solid rgba(0, 229, 255, 0.5);
+    background: linear-gradient(180deg, rgba(8, 14, 28, 0.88), rgba(8, 14, 28, 0.35));
+    border-top: 2px solid rgba(0, 229, 255, 0.55);
     padding: 8px 36px; clip-path: polygon(0 0, 100% 0, 94% 100%, 6% 100%);
   }
   .stat { text-align: center; }
-  .stat .label { font-size: 10px; letter-spacing: 3px; color: #6f8aa8; font-weight: 700; }
-  .stat .value { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 0 10px rgba(0, 229, 255, 0.6); }
-  #wave-value { color: #ff2d8f; text-shadow: 0 0 12px rgba(255, 45, 143, 0.8); }
+  .stat .label { font-size: 10px; letter-spacing: 3px; color: #7fa0c4; font-weight: 700; }
+  .stat .value { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 0 8px rgba(0, 229, 255, 0.45); }
+  #wave-value { color: #ff2d8f; text-shadow: 0 0 10px rgba(255, 45, 143, 0.65); }
   #combo-box { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity 0.2s; }
   #combo-box.active { opacity: 1; }
   #combo-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: #ffd166; text-shadow: 0 0 10px #ff9f1c; letter-spacing: 2px; }
@@ -139,53 +137,53 @@
   #radar-wrap {
     position: absolute; top: 24px; left: 28px; width: 144px; height: 144px;
     border-radius: 50%; border: 2px solid rgba(0, 229, 255, 0.45);
-    background: radial-gradient(circle, rgba(0, 30, 50, 0.78) 0%, rgba(4, 8, 18, 0.92) 100%);
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15), inset 0 0 15px rgba(0, 229, 255, 0.2);
+    background: radial-gradient(circle, rgba(0, 30, 50, 0.8) 0%, rgba(4, 8, 18, 0.94) 100%);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.14), inset 0 0 14px rgba(0, 229, 255, 0.18);
     overflow: hidden;
   }
   #radar-canvas { width: 100%; height: 100%; display: block; }
-  #radar-label { position: absolute; bottom: 6px; width: 100%; text-align: center; font-size: 9px; letter-spacing: 2px; color: #00e5ff; opacity: 0.75; }
+  #radar-label { position: absolute; bottom: 6px; width: 100%; text-align: center; font-size: 9px; letter-spacing: 2px; color: #00e5ff; opacity: 0.78; }
 
   #vitals-wrap {
     position: absolute; left: 32px; bottom: 32px; width: 310px;
     transform: skewX(-10deg);
-    background: rgba(8, 14, 26, 0.68);
+    background: rgba(8, 14, 26, 0.76);
     border-left: 4px solid #00e5ff;
     padding: 12px 16px;
     backdrop-filter: blur(4px);
   }
   .bar-group { margin-bottom: 8px; }
   .bar-group:last-child { margin-bottom: 0; }
-  .bar-header { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 2px; color: #8ba8c7; margin-bottom: 3px; font-weight: 700; }
+  .bar-header { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 2px; color: #9ab7d6; margin-bottom: 3px; font-weight: 700; }
   .bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.08); overflow: hidden; }
   .bar-fill { height: 100%; transition: width 0.12s ease-out; }
-  #shield-fill { width: 100%; background: linear-gradient(90deg, #0077ff, #00e5ff); box-shadow: 0 0 10px #00e5ff; }
-  #health-fill { width: 100%; background: linear-gradient(90deg, #00e676, #69f0ae); box-shadow: 0 0 10px #00e676; }
-  #vitals-wrap.low #health-fill { background: linear-gradient(90deg, #ff1744, #ff5252); box-shadow: 0 0 12px #ff1744; }
+  #shield-fill { width: 100%; background: linear-gradient(90deg, #0077ff, #00e5ff); box-shadow: 0 0 8px #00e5ff; }
+  #health-fill { width: 100%; background: linear-gradient(90deg, #00e676, #69f0ae); box-shadow: 0 0 8px #00e676; }
+  #vitals-wrap.low #health-fill { background: linear-gradient(90deg, #ff1744, #ff5252); box-shadow: 0 0 10px #ff1744; }
   #energy-fill { width: 100%; background: linear-gradient(90deg, #ff9100, #ffd740); }
 
   #weapon-wrap {
     position: absolute; right: 32px; bottom: 32px; text-align: right;
     transform: skewX(-10deg);
-    background: rgba(8, 14, 26, 0.68);
+    background: rgba(8, 14, 26, 0.76);
     border-right: 4px solid #ff2d8f;
     padding: 12px 18px;
     backdrop-filter: blur(4px);
   }
   #weapon-name { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 3px; color: #00e5ff; font-weight: 700; }
   #weapon-mode { font-size: 11px; color: #ff2d8f; letter-spacing: 2px; margin-bottom: 2px; }
-  #ammo-value { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 15px rgba(0, 229, 255, 0.5); }
-  #ammo-value small { font-size: 16px; color: #6f8aa8; font-weight: 500; }
+  #ammo-value { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 12px rgba(0, 229, 255, 0.4); }
+  #ammo-value small { font-size: 16px; color: #7fa0c4; font-weight: 500; }
   .weapon-slots { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
-  .w-slot { font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.2); color: #6f8aa8; letter-spacing: 1px; }
-  .w-slot.active { border-color: #00e5ff; color: #fff; background: rgba(0, 229, 255, 0.2); box-shadow: 0 0 8px rgba(0,229,255,0.4); }
+  .w-slot { font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.2); color: #88a4c2; letter-spacing: 1px; }
+  .w-slot.active { border-color: #00e5ff; color: #fff; background: rgba(0, 229, 255, 0.2); box-shadow: 0 0 8px rgba(0,229,255,0.35); }
   #reload-hint { font-size: 12px; letter-spacing: 2px; color: #ffd166; margin-top: 4px; opacity: 0; font-weight: 700; }
 
   #kill-feed { position: absolute; right: 28px; top: 24px; text-align: right; display: flex; flex-direction: column; gap: 5px; }
   #bgm-badge {
     align-self: flex-end;
     font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 2px;
-    color: #7df9ff; background: rgba(8, 14, 28, 0.72);
+    color: #7df9ff; background: rgba(8, 14, 28, 0.78);
     border: 1px solid rgba(0, 229, 255, 0.35); padding: 3px 9px; margin-bottom: 4px;
   }
   #bgm-badge.muted { color: #8ba8c7; border-color: rgba(139, 168, 199, 0.25); opacity: 0.7; }
@@ -210,10 +208,10 @@
     position: absolute; left: 50%; top: 28%; transform: translate(-50%, -50%);
     text-align: center; opacity: 0; transition: opacity .35s, transform .35s;
   }
-  #wave-banner .main-txt { font-family: 'Orbitron', sans-serif; font-size: 46px; font-weight: 900; letter-spacing: 10px; color: #fff; text-shadow: 0 0 25px #ff2d8f, 0 0 50px #00e5ff; }
+  #wave-banner .main-txt { font-family: 'Orbitron', sans-serif; font-size: 46px; font-weight: 900; letter-spacing: 10px; color: #fff; text-shadow: 0 0 20px #ff2d8f, 0 0 40px #00e5ff; }
   #wave-banner .sub-txt { font-size: 14px; letter-spacing: 6px; color: #7df9ff; margin-top: 6px; }
 
-  /* ============ 3A 菜单界面 ============ */
+  /* ============ 菜单界面 ============ */
   .overlay {
     position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: radial-gradient(ellipse at center, rgba(10, 16, 34, 0.78), rgba(2, 4, 10, 0.96));
@@ -223,7 +221,7 @@
   .badge { font-size: 12px; letter-spacing: 6px; color: #ff2d8f; border: 1px solid rgba(255, 45, 143, 0.5); padding: 4px 14px; margin-bottom: 14px; }
   .title {
     font-family: 'Orbitron', sans-serif; font-size: 62px; font-weight: 900; letter-spacing: 12px; color: #fff;
-    text-shadow: 0 0 24px rgba(0, 229, 255, 0.8), 0 0 60px rgba(255, 45, 143, 0.5); margin-bottom: 6px;
+    text-shadow: 0 0 22px rgba(0, 229, 255, 0.7), 0 0 50px rgba(255, 45, 143, 0.4); margin-bottom: 6px;
   }
   .subtitle { font-size: 16px; letter-spacing: 8px; color: #7df9ff; margin-bottom: 36px; }
   .controls-grid {
@@ -242,12 +240,12 @@
     font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 6px; font-weight: 700;
     color: #030408; background: linear-gradient(90deg, #00e5ff, #7df9ff);
     border: none; clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
-    box-shadow: 0 0 28px rgba(0, 229, 255, 0.6); transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 0 24px rgba(0, 229, 255, 0.5); transition: transform .15s, box-shadow .15s;
   }
-  .btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 0 42px rgba(0, 229, 255, 0.95); }
+  .btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 0 36px rgba(0, 229, 255, 0.85); }
   #gameover-stats { font-size: 20px; color: #cfe9ff; margin-bottom: 32px; line-height: 1.9; text-align: center; }
   #gameover-stats b { font-family: 'Orbitron', sans-serif; color: #ffd166; font-size: 26px; }
-  .hint { margin-top: 20px; font-size: 12px; color: #6f8aa8; letter-spacing: 2px; }
+  .hint { margin-top: 20px; font-size: 12px; color: #7fa0c4; letter-spacing: 2px; }
 </style>
 </head>
 <body>
@@ -327,17 +325,17 @@
   <div id="shield-vignette"></div>
   <div id="wave-banner">
     <div class="main-txt">WAVE 01</div>
-    <div class="sub-txt">HOSTILE REINFORCEMENTS INBOUND</div>
+    <div class="sub-txt">ALIEN INVASION // RUINED METROPOLIS</div>
   </div>
 </div>
 
 <!-- 开始菜单 -->
 <div class="overlay" id="menu">
-  <div class="badge">BUILD 2026.11 // TACTICAL FPS v3.0</div>
+  <div class="badge">BUILD 2026.11 // HIGHWAY & STREETS v3.6</div>
   <div class="title">NEON STRIKE</div>
-  <div class="subtitle">霓 虹 突 袭 · 终 极 协 议</div>
+  <div class="subtitle">霓 虹 突 袭 · 街 道 公 路 战 区</div>
   <div class="controls-grid">
-    <div class="ctrl-row"><span class="key-cap">W A S D</span><span>战术移动</span></div>
+    <div class="ctrl-row"><span class="key-cap">W A S D</span><span>街道公路游击移动</span></div>
     <div class="ctrl-row"><span class="key-cap">SPACE</span><span>跳跃 / 喷气推进</span></div>
     <div class="ctrl-row"><span class="key-cap">LMB</span><span>主武器开火</span></div>
     <div class="ctrl-row"><span class="key-cap">RMB</span><span>战术瞄准镜 (全息 / 狙击镜)</span></div>
@@ -346,8 +344,8 @@
     <div class="ctrl-row"><span class="key-cap">R</span><span>战术换弹</span></div>
     <div class="ctrl-row"><span class="key-cap">Q / M</span><span>子弹时间 / 切换纯音乐</span></div>
   </div>
-  <button class="btn" id="start-btn">部署至战区</button>
-  <div class="hint">右键开镜可清晰锁定远距离目标 · 内置纯音乐合成器 (按 M 静音/开启)</div>
+  <button class="btn" id="start-btn">部署至街区公路</button>
+  <div class="hint">严密实体防穿模 · 红绿灯车流控速 · 场内无坠落残骸 · 外星人手持激光枪等速射击</div>
 </div>
 
 <!-- 结束菜单 -->
@@ -376,9 +374,10 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ============================================================
-   1. 拓宽的战区配置与三系重火力武器库
+   1. 战区配置与三系重火力武器库
 ============================================================ */
-const ARENA = 52;
+const ARENA = 76;
+const PLAYER_BULLET_SPEED = 48.0;
 const canvas = document.getElementById('game-canvas');
 const radarCanvas = document.getElementById('radar-canvas');
 const radarCtx = radarCanvas.getContext('2d');
@@ -388,19 +387,19 @@ const WEAPONS = [
     id: 0, name: 'V-47 PULSE RIFLE', mode: 'AUTO // 750 RPM',
     magSize: 32, fireRate: 0.085, damage: 28, headshotMult: 2.2,
     pellets: 1, spread: 0.011, adsSpread: 0.0015, recoil: 0.022,
-    reloadTime: 1.25, color: 0x00f0ff, tracerColor: 0x7df9ff, fov: 54
+    reloadTime: 1.25, color: 0x00d8f0, tracerColor: 0x67e8f9, fov: 54
   },
   {
     id: 1, name: 'SG-8 PLASMA BREACHER', mode: 'BUCKSHOT // 8 PELLETS',
     magSize: 8, fireRate: 0.6, damage: 24, headshotMult: 1.75,
     pellets: 8, spread: 0.08, adsSpread: 0.042, recoil: 0.08,
-    reloadTime: 1.45, color: 0x9eff00, tracerColor: 0xc8ff4d, fov: 60
+    reloadTime: 1.45, color: 0x84cc16, tracerColor: 0xbef264, fov: 60
   },
   {
     id: 2, name: 'XR-9 RAILGUN SNIPER', mode: 'HYPER-VELOCITY // PIERCING',
     magSize: 5, fireRate: 0.92, damage: 145, headshotMult: 3.0,
     pellets: 1, spread: 0.007, adsSpread: 0.0001, recoil: 0.1,
-    reloadTime: 1.6, color: 0x1e9bff, tracerColor: 0x66d9ff, fov: 22
+    reloadTime: 1.6, color: 0x38bdf8, tracerColor: 0x7dd3fc, fov: 22
   }
 ];
 
@@ -426,13 +425,13 @@ const state = {
 };
 
 const player = {
-  pos: new THREE.Vector3(0, 1.75, 16),
+  pos: new THREE.Vector3(0, 1.75, 18),
   vel: new THREE.Vector3(),
   yaw: 0, pitch: 0,
   grounded: true,
   sliding: false, slideTimer: 0, slideDir: new THREE.Vector3(),
   height: 1.75,
-  radius: 0.55
+  radius: 0.58
 };
 
 const keys = {};
@@ -447,82 +446,180 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.3;
+renderer.toneMappingExposure = 1.15;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x060914);
-scene.fog = new THREE.FogExp2(0x060914, 0.012);
+scene.background = new THREE.Color(0x060b1c);
+scene.fog = new THREE.FogExp2(0x070d22, 0.0056);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.08, 260);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.08, 480);
 camera.rotation.order = 'YXZ';
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.78, 0.42, 0.2);
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.36, 0.34, 0.46);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-scene.add(new THREE.HemisphereLight(0x6699cc, 0x162038, 1.28));
+scene.add(new THREE.HemisphereLight(0x6890c8, 0x121b2e, 1.22));
 
-const dirLight = new THREE.DirectionalLight(0xb8dcff, 1.7);
-dirLight.position.set(24, 42, 20);
+const dirLight = new THREE.DirectionalLight(0xb4d4f8, 1.45);
+dirLight.position.set(34, 62, 28);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.set(2048, 2048);
-dirLight.shadow.camera.near = 4;
-dirLight.shadow.camera.far = 130;
-const dSize = 56;
+dirLight.shadow.camera.near = 6;
+dirLight.shadow.camera.far = 190;
+const dSize = 84;
 dirLight.shadow.camera.left = -dSize; dirLight.shadow.camera.right = dSize;
 dirLight.shadow.camera.top = dSize; dirLight.shadow.camera.bottom = -dSize;
 dirLight.shadow.bias = -0.0005;
 scene.add(dirLight);
 
-const rimLight = new THREE.DirectionalLight(0xff4d9d, 0.58);
-rimLight.position.set(-28, 18, -24);
+const rimLight = new THREE.DirectionalLight(0xe879f9, 0.5);
+rimLight.position.set(-36, 26, -32);
 scene.add(rimLight);
 
 const lightPositions = [
-  [-28, 9, -28, 0x00e5ff], [28, 9, 28, 0xff2d8f],
-  [28, 9, -28, 0x7c4dff], [-28, 9, 28, 0x00e5ff],
-  [0, 10, 0, 0x4dd0e1]
+  [-32, 9, -32, 0x06b6d4], [32, 9, 32, 0xe879f9],
+  [32, 9, -32, 0xfbbf24], [-32, 9, 32, 0x38bdf8],
+  [0, 9, 0, 0x22d3ee], [-16, 8, 16, 0xf97316], [16, 8, -16, 0xa855f7]
 ];
 lightPositions.forEach(([x, y, z, col]) => {
-  const pl = new THREE.PointLight(col, 2.5, 55);
+  const pl = new THREE.PointLight(col, 1.65, 52);
   pl.position.set(x, y, z);
   scene.add(pl);
 });
 
 /* ============================================================
-   3. 程序化地面纹理与拓宽地图障碍物
+   3. 条状街道与城市公路、红绿灯控制、每路约3辆车、精致车辆建模与防穿模系统
 ============================================================ */
-function createSciFiFloorTexture() {
+function createCyberStreetTexture() {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 512;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#0f1729';
+  ctx.fillStyle = '#0b111e';
   ctx.fillRect(0, 0, 512, 512);
 
-  for (let i = 0; i < 3500; i++) {
-    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.07)';
-    ctx.fillRect(Math.random() * 512, Math.random() * 512, 10, 1);
+  for (let i = 0; i < 4200; i++) {
+    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.12)';
+    ctx.fillRect(Math.random() * 512, Math.random() * 512, 9, 1);
   }
-  ctx.strokeStyle = '#223354';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, 508, 508);
-  ctx.strokeRect(128, 128, 256, 256);
 
-  ctx.fillStyle = 'rgba(0, 229, 255, 0.35)';
-  [124, 380].forEach(x => [124, 380].forEach(y => ctx.fillRect(x, y, 8, 8)));
+  ctx.fillStyle = 'rgba(250, 204, 21, 0.42)';
+  ctx.fillRect(253, 0, 2, 512);
+  ctx.fillRect(257, 0, 2, 512);
+  ctx.fillRect(0, 253, 512, 2);
+  ctx.fillRect(0, 257, 512, 2);
+
+  ctx.fillStyle = 'rgba(226, 232, 240, 0.28)';
+  for (let x = 16; x < 500; x += 48) {
+    if (Math.abs(x - 256) > 36) {
+      ctx.fillRect(x, 127, 22, 2.5);
+      ctx.fillRect(x, 383, 22, 2.5);
+    }
+  }
+  for (let y = 16; y < 500; y += 48) {
+    if (Math.abs(y - 256) > 36) {
+      ctx.fillRect(127, y, 2.5, 22);
+      ctx.fillRect(383, y, 2.5, 22);
+    }
+  }
+
+  ctx.fillStyle = 'rgba(203, 213, 225, 0.25)';
+  for (let i = -40; i <= 40; i += 16) {
+    ctx.fillRect(256 + i - 4, 206, 8, 20);
+    ctx.fillRect(256 + i - 4, 286, 8, 20);
+    ctx.fillRect(206, 256 + i - 4, 20, 8);
+    ctx.fillRect(286, 256 + i - 4, 20, 8);
+  }
 
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(22, 22);
+  tex.repeat.set(30, 30);
   tex.anisotropy = 8;
   return tex;
 }
 
+function createShenzhenNightFacadeTexture(seed = 0) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 512;
+  const ctx = c.getContext('2d');
+
+  const palettes = [
+    ['#38bdf8', '#f472b6', '#fbbf24', '#a78bfa'],
+    ['#22d3ee', '#fb923c', '#facc15', '#e879f9'],
+    ['#60a5fa', '#f43f5e', '#34d399', '#fbbf24'],
+    ['#c084fc', '#22d3ee', '#fbbf24', '#f472b6']
+  ];
+  const winColors = palettes[seed % palettes.length];
+
+  ctx.fillStyle = '#0b1220';
+  ctx.fillRect(0, 0, 256, 512);
+
+  ctx.fillStyle = '#152036';
+  for (let x = 0; x < 256; x += 32) ctx.fillRect(x, 0, 4, 512);
+
+  let idx = seed * 17;
+  for (let y = 12; y < 498; y += 16) {
+    for (let x = 8; x < 248; x += 20) {
+      idx = (idx * 31 + 13) % 997;
+      const r = idx % 100;
+      if (r < 54) {
+        ctx.fillStyle = r < 22 ? 'rgba(255, 248, 220, 0.72)' : winColors[idx % winColors.length];
+        ctx.fillRect(x, y, 12, 9);
+      } else {
+        ctx.fillStyle = '#070c16';
+        ctx.fillRect(x, y, 12, 9);
+      }
+    }
+  }
+
+  for (let y = 0; y < 512; y += 64) {
+    ctx.fillStyle = '#1b2944';
+    ctx.fillRect(0, y, 256, 2);
+    if ((y / 64 + seed) % 2 === 0) {
+      ctx.fillStyle = winColors[(y / 64 + seed) % winColors.length];
+      ctx.fillRect(0, y + 2, 256, 2);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function createBillboardTexture(titleText, subText, bgHex, borderHex, textHex) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 192;
+  const ctx = c.getContext('2d');
+
+  ctx.fillStyle = bgHex;
+  ctx.fillRect(0, 0, 512, 192);
+  ctx.strokeStyle = borderHex;
+  ctx.lineWidth = 6;
+  ctx.strokeRect(10, 10, 492, 172);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  for (let y = 0; y < 192; y += 8) ctx.fillRect(0, y, 512, 2);
+
+  ctx.fillStyle = textHex;
+  ctx.font = 'bold 40px Orbitron, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(titleText, 256, 90);
+
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 22px Rajdhani, sans-serif';
+  ctx.fillText(subText, 256, 138);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(ARENA * 2 + 12, ARENA * 2 + 12),
-  new THREE.MeshStandardMaterial({ map: createSciFiFloorTexture(), roughness: 0.45, metalness: 0.6 })
+  new THREE.PlaneGeometry(ARENA * 2 + 220, ARENA * 2 + 220),
+  new THREE.MeshStandardMaterial({ map: createCyberStreetTexture(), roughness: 0.56, metalness: 0.48 })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -531,93 +628,772 @@ scene.add(ground);
 const colliders = [];
 const barrels = [];
 
-const coverMat = new THREE.MeshStandardMaterial({ color: 0x1e2b45, roughness: 0.42, metalness: 0.65 });
-const pillarMat = new THREE.MeshStandardMaterial({ color: 0x253554, roughness: 0.38, metalness: 0.72 });
-const trimMatCyan = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-const trimMatPink = new THREE.MeshBasicMaterial({ color: 0xff2d8f });
-const trimMatGold = new THREE.MeshBasicMaterial({ color: 0xffd166 });
+function registerSolidBox(x, z, w, h, d, mesh) {
+  colliders.push({
+    minX: x - w / 2,
+    maxX: x + w / 2,
+    minZ: z - d / 2,
+    maxZ: z + d / 2,
+    height: h,
+    mesh
+  });
+}
 
-function addCoverBox(x, z, w, h, d, accent = 0, mat = coverMat) {
+const facadeMats = [0, 1, 2, 3, 4, 5].map(i =>
+  new THREE.MeshStandardMaterial({
+    map: createShenzhenNightFacadeTexture(i),
+    roughness: 0.38, metalness: 0.68,
+    emissive: 0x1e293b, emissiveIntensity: 0.22
+  })
+);
+
+const coverMat = new THREE.MeshStandardMaterial({ color: 0x182338, roughness: 0.45, metalness: 0.68 });
+const pillarMat = new THREE.MeshStandardMaterial({ color: 0x202e4a, roughness: 0.38, metalness: 0.72 });
+const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.35, metalness: 0.85 });
+const doorLeafMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.75 });
+
+const neonColors = [0x22d3ee, 0xf472b6, 0xfbbf24, 0xa855f7, 0x34d399, 0xf97316];
+const trimMats = neonColors.map(hex => new THREE.MeshBasicMaterial({ color: hex }));
+
+function attachLockedBuildingDoors(parentMesh, width, depth, accentIdx = 0) {
+  const trim = trimMats[accentIdx % trimMats.length];
+  const makeDoor = (localX, localY, localZ, rotY) => {
+    const dg = new THREE.Group();
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.55, 2.55, 0.16), doorFrameMat);
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(1.32, 2.38, 0.12), doorLeafMat);
+    leaf.position.z = 0.03;
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.36, 0.12), trim);
+    handle.position.set(0.45, -0.05, 0.11);
+    const lockStrip = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.07, 0.15), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+    lockStrip.position.set(0, 0.35, 0.06);
+    dg.add(frame, leaf, handle, lockStrip);
+    dg.position.set(localX, localY, localZ);
+    dg.rotation.y = rotY;
+    parentMesh.add(dg);
+  };
+
+  if (width >= 4.2) {
+    makeDoor(0, -parentMesh.geometry.parameters.height / 2 + 1.28, depth / 2 + 0.06, 0);
+  }
+  if (depth >= 4.2) {
+    makeDoor(0, -parentMesh.geometry.parameters.height / 2 + 1.28, -depth / 2 - 0.06, Math.PI);
+  }
+}
+
+function addCoverBox(x, z, w, h, d, accent = 0, mat = coverMat, registerColliderFlag = true, withDoors = false) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   mesh.position.set(x, h / 2, z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  if (withDoors && h >= 4.0) attachLockedBuildingDoors(mesh, w, d, accent);
   scene.add(mesh);
 
-  const trim = accent === 1 ? trimMatPink : (accent === 2 ? trimMatGold : trimMatCyan);
-  const strip = new THREE.Mesh(
-    new THREE.BoxGeometry(w + 0.05, 0.1, d + 0.05),
-    trim
-  );
-  strip.position.set(x, h - 0.14, z);
+  const trim = trimMats[accent % trimMats.length];
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.14, d + 0.08), trim);
+  strip.position.set(x, h - 0.18, z);
   scene.add(strip);
 
-  colliders.push({
-    minX: x - w / 2, maxX: x + w / 2,
-    minZ: z - d / 2, maxZ: z + d / 2,
-    height: h, mesh
-  });
+  if (registerColliderFlag) {
+    registerSolidBox(x, z, w, h, d, mesh);
+  }
+  return mesh;
 }
 
-function addCylinderPillar(x, z, r, h, accent = 0) {
-  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.08, h, 18), pillarMat);
-  mesh.position.set(x, h / 2, z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+function addSteppedTower(x, z, baseW, baseD, h1, h2, h3, matIdx = 0, accentIdx = 0) {
+  const mat = facadeMats[matIdx % facadeMats.length];
+  const trim = trimMats[accentIdx % trimMats.length];
+
+  const b1 = new THREE.Mesh(new THREE.BoxGeometry(baseW, h1, baseD), mat);
+  b1.position.set(x, h1 / 2, z);
+  b1.castShadow = true; b1.receiveShadow = true;
+  attachLockedBuildingDoors(b1, baseW, baseD, accentIdx);
+  scene.add(b1);
+
+  const ring1 = new THREE.Mesh(new THREE.BoxGeometry(baseW + 0.1, 0.16, baseD + 0.1), trim);
+  ring1.position.set(x, h1 - 0.12, z);
+  scene.add(ring1);
+
+  if (h2 > 0) {
+    const w2 = baseW * 0.72, d2 = baseD * 0.72;
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, d2), facadeMats[(matIdx + 1) % facadeMats.length]);
+    b2.position.set(x + baseW * 0.06, h1 + h2 / 2, z - baseD * 0.05);
+    b2.castShadow = true;
+    scene.add(b2);
+
+    const ring2 = new THREE.Mesh(new THREE.BoxGeometry(w2 + 0.1, 0.16, d2 + 0.1), trimMats[(accentIdx + 1) % trimMats.length]);
+    ring2.position.set(x + baseW * 0.06, h1 + h2 - 0.1, z - baseD * 0.05);
+    scene.add(ring2);
+
+    if (h3 > 0) {
+      const spire = new THREE.Mesh(new THREE.CylinderGeometry(baseW * 0.14, baseW * 0.24, h3, 6), pillarMat);
+      spire.position.set(x + baseW * 0.06, h1 + h2 + h3 / 2, z - baseD * 0.05);
+      scene.add(spire);
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), trimMats[(accentIdx + 2) % trimMats.length]);
+      beacon.position.set(x + baseW * 0.06, h1 + h2 + h3 + 0.2, z - baseD * 0.05);
+      scene.add(beacon);
+    }
+  }
+
+  registerSolidBox(x, z, baseW, h1, baseD, b1);
+}
+
+function addPrismBuilding(x, z, radius, height, sides, matIdx = 0, accentIdx = 1) {
+  const mat = facadeMats[matIdx % facadeMats.length];
+  const trim = trimMats[accentIdx % trimMats.length];
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.85, radius, height, sides), mat);
+  mesh.position.set(x, height / 2, z);
+  mesh.castShadow = true; mesh.receiveShadow = true;
+
+  const doorGroup = new THREE.Group();
+  const dFrame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.5, 0.18), doorFrameMat);
+  const dLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.28, 2.34, 0.14), doorLeafMat);
+  dLeaf.position.z = 0.04;
+  const dLight = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.07, 0.16), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+  dLight.position.set(0, 0.35, 0.06);
+  doorGroup.add(dFrame, dLeaf, dLight);
+  doorGroup.position.set(0, -height / 2 + 1.25, radius * 0.96);
+  mesh.add(doorGroup);
   scene.add(mesh);
 
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(r + 0.03, 0.05, 8, 24),
-    accent === 1 ? trimMatPink : trimMatCyan
-  );
-  ring.rotation.x = Math.PI / 2;
-  ring.position.set(x, h - 0.25, z);
-  scene.add(ring);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.88, radius * 0.9, 0.18, sides), trim);
+  band.position.set(x, height - 0.2, z);
+  scene.add(band);
 
-  colliders.push({
-    minX: x - r, maxX: x + r,
-    minZ: z - r, maxZ: z + r,
-    height: h, mesh
+  registerSolidBox(x, z, radius * 1.85, height, radius * 1.85, mesh);
+}
+
+function addCityLandmarkBuilding(x, z, style, matIdx, accentIdx) {
+  const mat = facadeMats[matIdx % facadeMats.length];
+  const trim = trimMats[accentIdx % trimMats.length];
+  const g = new THREE.Group();
+
+  if (style === 'spire') {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(7.2, 16, 7.2), mat);
+    base.position.y = 8; base.castShadow = true;
+    const mid = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 3.3, 14, 8), facadeMats[(matIdx + 2) % facadeMats.length]);
+    mid.position.y = 23; mid.castShadow = true;
+    const crown = new THREE.Mesh(new THREE.ConeGeometry(2.6, 8, 8), trim);
+    crown.position.y = 34;
+    attachLockedBuildingDoors(base, 7.2, 7.2, accentIdx);
+    g.add(base, mid, crown);
+    registerSolidBox(x, z, 7.2, 16, 7.2, base);
+  } else if (style === 'arch') {
+    const legL = new THREE.Mesh(new THREE.BoxGeometry(3.2, 18, 5.2), mat);
+    legL.position.set(-3.4, 9, 0); legL.castShadow = true;
+    const legR = new THREE.Mesh(new THREE.BoxGeometry(3.2, 18, 5.2), mat);
+    legR.position.set(3.4, 9, 0); legR.castShadow = true;
+    const topSpan = new THREE.Mesh(new THREE.BoxGeometry(10.6, 3.4, 5.8), facadeMats[(matIdx + 1) % facadeMats.length]);
+    topSpan.position.set(0, 19.5, 0); topSpan.castShadow = true;
+    const spanNeon = new THREE.Mesh(new THREE.BoxGeometry(10.7, 0.16, 5.9), trim);
+    spanNeon.position.set(0, 21.1, 0);
+    g.add(legL, legR, topSpan, spanNeon);
+    registerSolidBox(x - 3.4, z, 3.2, 18, 5.2, legL);
+    registerSolidBox(x + 3.4, z, 3.2, 18, 5.2, legR);
+  } else {
+    const ped = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.2, 11, 12), mat);
+    ped.position.y = 5.5; ped.castShadow = true;
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(3.8, 18, 14), facadeMats[(matIdx + 3) % facadeMats.length]);
+    orb.position.y = 14.2; orb.castShadow = true;
+    const equator = new THREE.Mesh(new THREE.TorusGeometry(3.9, 0.12, 8, 24), trim);
+    equator.rotation.x = Math.PI / 2; equator.position.y = 14.2;
+    g.add(ped, orb, equator);
+    registerSolidBox(x, z, 7.2, 11, 7.2, ped);
+  }
+
+  g.position.set(x, 0, z);
+  scene.add(g);
+}
+
+const highwayMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.45, metalness: 0.55 });
+const highwayLineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+const highwayWhiteMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0 });
+
+function addHighwayCorridor(axis, offset) {
+  const isX = axis === 'x';
+  const roadLen = ARENA * 2 + 20;
+  const roadWidth = 9.2;
+  const road = new THREE.Mesh(
+    new THREE.BoxGeometry(isX ? roadLen : roadWidth, 0.06, isX ? roadWidth : roadLen),
+    highwayMat
+  );
+  road.position.set(isX ? 0 : offset, 0.03, isX ? offset : 0);
+  road.receiveShadow = true;
+  scene.add(road);
+
+  const centerStrip = new THREE.Mesh(
+    new THREE.BoxGeometry(isX ? roadLen : 0.18, 0.07, isX ? 0.18 : roadLen),
+    highwayLineMat
+  );
+  centerStrip.position.set(isX ? 0 : offset, 0.035, isX ? offset : 0);
+  scene.add(centerStrip);
+
+  [-2.3, 2.3].forEach(laneOff => {
+    const edgeLine = new THREE.Mesh(
+      new THREE.BoxGeometry(isX ? roadLen : 0.12, 0.07, isX ? 0.12 : roadLen),
+      highwayWhiteMat
+    );
+    edgeLine.position.set(isX ? 0 : offset + laneOff, 0.035, isX ? offset + laneOff : 0);
+    scene.add(edgeLine);
   });
 }
 
-addCoverBox(0, -ARENA - 1, ARENA * 2 + 4, 9, 2, 0);
-addCoverBox(0, ARENA + 1, ARENA * 2 + 4, 9, 2, 1);
-addCoverBox(-ARENA - 1, 0, 2, 9, ARENA * 2 + 4, 0);
-addCoverBox(ARENA + 1, 0, 2, 9, ARENA * 2 + 4, 1);
+// 四条主干道：x = -24, x = +24, z = -24, z = +24
+addHighwayCorridor('x', -24);
+addHighwayCorridor('x', 24);
+addHighwayCorridor('z', -24);
+addHighwayCorridor('z', 24);
 
-addCoverBox(0, 0, 5.2, 2.4, 5.2, 1);
-addCoverBox(-14, -14, 4.5, 4.2, 1.6, 0);
-addCoverBox(14, 14, 4.5, 4.2, 1.6, 0);
-addCoverBox(14, -14, 1.6, 4.2, 4.5, 1);
-addCoverBox(-14, 14, 1.6, 4.2, 4.5, 1);
+const trafficLights = [];
+function addTrafficLight(x, z, rotY = 0, groupId = 0) {
+  const tg = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 5.2, 10), pillarMat);
+  pole.position.set(0, 2.6, 0); pole.castShadow = true;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 0.12), pillarMat);
+  arm.position.set(1.1, 4.9, 0);
 
-addCoverBox(0, -24, 8.0, 1.35, 1.4, 2);
-addCoverBox(0, 24, 8.0, 1.35, 1.4, 2);
-addCoverBox(-26, 0, 1.4, 1.35, 8.0, 2);
-addCoverBox(26, 0, 1.4, 1.35, 8.0, 2);
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.18, 0.36), coverMat);
+  housing.position.set(1.8, 4.35, 0);
 
-[[-34, -20], [34, -20], [-34, 20], [34, 20], [-20, -36], [20, -36], [-20, 36], [20, 36]].forEach(([x, z], i) => {
-  addCylinderPillar(x, z, 1.45, 7.5, i % 2);
+  const redLight = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2d55 }));
+  redLight.position.set(1.8, 4.68, 0.19);
+  const yellowLight = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
+  yellowLight.position.set(1.8, 4.35, 0.19);
+  const greenLight = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+  greenLight.position.set(1.8, 4.02, 0.19);
+
+  tg.add(pole, arm, housing, redLight, yellowLight, greenLight);
+  tg.position.set(x, 0, z);
+  tg.rotation.y = rotY;
+  scene.add(tg);
+  trafficLights.push({ redLight, yellowLight, greenLight, groupId, state: 'green' });
+
+  registerSolidBox(x, z, 0.55, 5.2, 0.55, pole);
+}
+
+function getSignalForAxis(axis, timeSec) {
+  // 0..10s: X轴绿灯 / Z轴红灯；10..12s: X轴黄灯；12..22s: Z轴绿灯 / X轴红灯；22..24s: Z轴黄灯
+  const t = timeSec % 24;
+  if (axis === 'x') {
+    if (t < 10) return 'green';
+    if (t < 12) return 'yellow';
+    return 'red';
+  } else {
+    if (t >= 12 && t < 22) return 'green';
+    if (t >= 22) return 'yellow';
+    return 'red';
+  }
+}
+
+function createDetailedVehicleMesh(bodyHex, trimHex, isWreck = false) {
+  const cg = new THREE.Group();
+  const paintMat = new THREE.MeshStandardMaterial({
+    color: isWreck ? 0x242c3d : bodyHex,
+    roughness: isWreck ? 0.72 : 0.25,
+    metalness: isWreck ? 0.58 : 0.85,
+    emissive: isWreck ? 0x2b1116 : 0x091326,
+    emissiveIntensity: isWreck ? 0.22 : 0.15
+  });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: isWreck ? 0x111827 : 0x0ea5e9,
+    roughness: 0.12, metalness: 0.9,
+    emissive: isWreck ? 0x000000 : 0x0369a1,
+    emissiveIntensity: isWreck ? 0 : 0.25
+  });
+  const darkTrimMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.5, metalness: 0.75 });
+  const accentMat = new THREE.MeshBasicMaterial({ color: trimHex });
+  const headLampMat = new THREE.MeshBasicMaterial({ color: isWreck ? 0x78350f : 0xf8fafc });
+  const tailLampMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
+
+  const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.04, 0.52, 4.36), paintMat);
+  lowerBody.position.set(0, 0.56, 0);
+  lowerBody.castShadow = true; lowerBody.receiveShadow = true;
+
+  const frontLip = new THREE.Mesh(new THREE.BoxGeometry(2.06, 0.14, 0.42), darkTrimMat);
+  frontLip.position.set(0, 0.36, 2.08);
+  frontLip.rotation.x = 0.12;
+
+  const rearDiffuser = new THREE.Mesh(new THREE.BoxGeometry(2.02, 0.22, 0.36), darkTrimMat);
+  rearDiffuser.position.set(0, 0.42, -2.08);
+  rearDiffuser.rotation.x = -0.18;
+
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.12, 1.35), paintMat);
+  hood.position.set(0, 0.84, 1.32);
+  hood.rotation.x = 0.08;
+
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.1, 1.36), paintMat);
+  roof.position.set(0, 1.34, -0.22);
+  roof.castShadow = true;
+
+  const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.46, 0.12), glassMat);
+  frontGlass.position.set(0, 1.09, 0.54);
+  frontGlass.rotation.x = 0.68;
+
+  const rearGlass = new THREE.Mesh(new THREE.BoxGeometry(1.60, 0.52, 0.12), glassMat);
+  rearGlass.position.set(0, 1.06, -1.08);
+  rearGlass.rotation.x = -0.58;
+
+  [-0.84, 0.84].forEach(sx => {
+    const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.34, 1.24), glassMat);
+    sideWin.position.set(sx, 1.12, -0.22);
+    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.16), darkTrimMat);
+    mirror.position.set(sx * 1.22, 0.94, 0.45);
+    cg.add(sideWin, mirror);
+  });
+
+  const wingStanchionL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.14), darkTrimMat);
+  wingStanchionL.position.set(-0.65, 0.94, -1.85);
+  const wingStanchionR = wingStanchionL.clone();
+  wingStanchionR.position.x = 0.65;
+  const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(2.12, 0.06, 0.28), accentMat);
+  wingBlade.position.set(0, 1.08, -1.9);
+  wingBlade.rotation.x = 0.14;
+
+  const sideNeon = new THREE.Mesh(new THREE.BoxGeometry(2.08, 0.05, 3.8), accentMat);
+  sideNeon.position.set(0, 0.66, 0);
+
+  [-0.72, 0.72].forEach(lx => {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.08), headLampMat);
+    hl.position.set(lx, 0.68, 2.18);
+    cg.add(hl);
+  });
+  const tailBar = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.11, 0.08), tailLampMat);
+  tailBar.position.set(0, 0.72, -2.18);
+
+  const tireGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.28, 18);
+  tireGeo.rotateZ(Math.PI / 2);
+  const tireMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.85, metalness: 0.25 });
+  const rimGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.30, 10);
+  rimGeo.rotateZ(Math.PI / 2);
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.25, metalness: 0.9 });
+
+  const wheelCoords = [
+    [-1.02, 0.4, 1.32], [1.02, 0.4, 1.32],
+    [-1.02, 0.4, -1.32], [1.02, 0.4, -1.32]
+  ];
+  wheelCoords.forEach(([wx, wy, wz], idx) => {
+    if (isWreck && idx === 3) return;
+    const tire = new THREE.Mesh(tireGeo, tireMat);
+    tire.position.set(wx, wy, wz);
+    const rim = new THREE.Mesh(rimGeo, rimMat);
+    rim.position.set(wx, wy, wz);
+    cg.add(tire, rim);
+  });
+
+  cg.add(
+    lowerBody, frontLip, rearDiffuser, hood, roof,
+    frontGlass, rearGlass, wingStanchionL, wingStanchionR,
+    wingBlade, sideNeon, tailBar
+  );
+  return cg;
+}
+
+const highwayCars = [];
+function addHighwayCar(x, z, rotY, bodyHex, trimHex, maxSpeed = 8.0, axis = 'z', dir = 1) {
+  const car = createDetailedVehicleMesh(bodyHex, trimHex, false);
+  car.position.set(x, 0, z);
+  car.rotation.y = rotY;
+  scene.add(car);
+
+  const cos = Math.cos(rotY), sin = Math.sin(rotY);
+  const hw = Math.abs(1.06 * cos) + Math.abs(2.22 * sin);
+  const hd = Math.abs(1.06 * sin) + Math.abs(2.22 * cos);
+
+  const colliderObj = {
+    minX: x - hw, maxX: x + hw,
+    minZ: z - hd, maxZ: z + hd,
+    height: 1.5, mesh: car
+  };
+  colliders.push(colliderObj);
+  highwayCars.push({
+    mesh: car, collider: colliderObj, hw, hd,
+    maxSpeed, curSpeed: maxSpeed, axis, dir
+  });
+}
+
+function addWreckedCar(x, z, rotY = 0, accentIdx = 0) {
+  const trim = trimMats[accentIdx % trimMats.length].color.getHex();
+  const cg = createDetailedVehicleMesh(0x1e2536, trim, true);
+  cg.position.set(x, 0, z);
+  cg.rotation.y = rotY;
+  cg.rotation.z = (Math.random() - 0.5) * 0.12;
+  scene.add(cg);
+
+  const cos = Math.cos(rotY), sin = Math.sin(rotY);
+  const hw = Math.abs(1.06 * cos) + Math.abs(2.22 * sin);
+  const hd = Math.abs(1.06 * sin) + Math.abs(2.22 * cos);
+  registerSolidBox(x, z, hw * 2, 1.5, hd * 2, cg);
+}
+
+function addStreetStall(x, z, rotY = 0, accentIdx = 0) {
+  const stallGroup = new THREE.Group();
+  const trim = trimMats[accentIdx % trimMats.length];
+
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.95, 1.2), coverMat);
+  counter.position.set(0, 0.475, 0);
+  counter.castShadow = true; counter.receiveShadow = true;
+  stallGroup.add(counter);
+
+  const topGlow = new THREE.Mesh(new THREE.BoxGeometry(2.76, 0.08, 1.26), trim);
+  topGlow.position.set(0, 0.96, 0);
+  stallGroup.add(topGlow);
+
+  const canopy = new THREE.Mesh(
+    new THREE.BoxGeometry(2.9, 0.1, 1.55),
+    new THREE.MeshStandardMaterial({
+      color: accentIdx % 2 === 0 ? 0x1e3a5f : 0x4a1d3d,
+      roughness: 0.5, metalness: 0.3
+    })
+  );
+  canopy.position.set(0, 2.12, 0.12);
+  canopy.rotation.x = 0.22;
+  canopy.castShadow = true;
+  stallGroup.add(canopy);
+
+  [-1.28, 1.28].forEach(px => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.18, 8), pillarMat);
+    post.position.set(px, 1.09, 0.42);
+    stallGroup.add(post);
+  });
+  const signBar = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.24, 0.12), trim);
+  signBar.position.set(0, 2.34, 0.8);
+  stallGroup.add(signBar);
+
+  stallGroup.position.set(x, 0, z);
+  stallGroup.rotation.y = rotY;
+  scene.add(stallGroup);
+
+  const cos = Math.cos(rotY), sin = Math.sin(rotY);
+  const hw = Math.abs(1.4 * cos) + Math.abs(0.65 * sin);
+  const hd = Math.abs(1.4 * sin) + Math.abs(0.65 * cos);
+  registerSolidBox(x, z, hw * 2, 1.0, hd * 2, counter);
+}
+
+function addBillboard(x, y, z, rotY, w, h, title, sub, bgHex, borderHex, textHex) {
+  const tex = createBillboardTexture(title, sub, bgHex, borderHex, textHex);
+  const board = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+  );
+  board.position.set(x, y, z);
+  board.rotation.y = rotY;
+  scene.add(board);
+}
+
+// 1. 透明边界力场
+const boundaryBarrierMat = new THREE.MeshBasicMaterial({
+  color: 0x22d3ee, transparent: true, opacity: 0.055,
+  side: THREE.DoubleSide, depthWrite: false
 });
-addCoverBox(-28, -32, 6.5, 3.6, 1.8, 1);
-addCoverBox(28, -32, 6.5, 3.6, 1.8, 0);
-addCoverBox(-28, 32, 6.5, 3.6, 1.8, 0);
-addCoverBox(28, 32, 6.5, 3.6, 1.8, 1);
-addCoverBox(-40, -8, 1.8, 3.2, 6.0, 2);
-addCoverBox(40, 8, 1.8, 3.2, 6.0, 2);
+const boundaryWireMat = new THREE.LineBasicMaterial({
+  color: 0x38bdf8, transparent: true, opacity: 0.22
+});
+[
+  [0, -ARENA, 0],
+  [0, ARENA, Math.PI],
+  [-ARENA, 0, Math.PI / 2],
+  [ARENA, 0, -Math.PI / 2]
+].forEach(([bx, bz, ry]) => {
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 2, 16), boundaryBarrierMat);
+  panel.position.set(bx, 8, bz);
+  panel.rotation.y = ry;
+  scene.add(panel);
+
+  const topLineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-ARENA, 15.8, 0),
+    new THREE.Vector3(ARENA, 15.8, 0)
+  ]);
+  const topLine = new THREE.Line(topLineGeo, boundaryWireMat);
+  topLine.position.set(bx, 0, bz);
+  topLine.rotation.y = ry;
+  scene.add(topLine);
+});
+
+// 2. 条状街区与公路沿线建筑群
+addCoverBox(0, 0, 4.4, 2.8, 4.4, 1, facadeMats[1], true, false);
+
+addSteppedTower(-10.5, -10.5, 5.2, 5.2, 9, 7, 4, 0, 0);
+addPrismBuilding(10.5, 10.5, 2.9, 13.0, 6, 1, 1);
+addSteppedTower(10.5, -10.5, 5.2, 5.2, 8, 9, 3, 2, 2);
+addPrismBuilding(-10.5, 10.5, 2.9, 11.0, 8, 3, 3);
+
+addSteppedTower(-10.5, 0, 4.8, 5.4, 11, 8, 3, 4, 2);
+addSteppedTower(10.5, 0, 4.8, 5.4, 12, 8, 4, 5, 4);
+addPrismBuilding(0, -11.5, 2.8, 12.5, 6, 2, 0);
+addSteppedTower(0, 11.5, 5.2, 4.8, 10, 7, 3, 3, 5);
+
+addCityLandmarkBuilding(-34, -34, 'spire', 0, 0);
+addCityLandmarkBuilding(34, -34, 'arch', 2, 2);
+addCityLandmarkBuilding(-34, 34, 'orb', 4, 4);
+addCityLandmarkBuilding(34, 34, 'spire', 1, 1);
+
+[-12, 0, 12].forEach((pos, i) => {
+  addSteppedTower(pos, -15.5, 5.6, 5.0, 14 + i * 2, 9, 4, i % 6, i % 6);
+  addSteppedTower(pos, 15.5, 5.6, 5.0, 13 + ((i + 1) % 3) * 2, 8, 4, (i + 2) % 6, (i + 1) % 6);
+  addSteppedTower(-15.5, pos, 5.0, 5.6, 14 + ((i + 2) % 3) * 2, 9, 4, (i + 3) % 6, (i + 2) % 6);
+  addSteppedTower(15.5, pos, 5.0, 5.6, 15 + (i % 3) * 2, 10, 5, (i + 4) % 6, (i + 3) % 6);
+});
+
+[-54, -42, -32, -12, 12, 32, 42, 54].forEach((pos, i) => {
+  addSteppedTower(pos, -33, 6.2, 5.6, 16 + (i % 4) * 3, 10, 5, i % 6, (i + 1) % 6);
+  addSteppedTower(pos, 33, 6.2, 5.6, 15 + ((i + 1) % 4) * 3, 10, 5, (i + 1) % 6, (i + 2) % 6);
+  addPrismBuilding(-33, pos, 3.3, 17 + (i % 3) * 3, 8, (i + 2) % 6, (i + 3) % 6);
+  addPrismBuilding(33, pos, 3.3, 18 + ((i + 2) % 3) * 3, 6, (i + 3) % 6, (i + 4) % 6);
+});
+
+addSteppedTower(-64, -14, 7.6, 7.2, 22, 14, 7, 2, 0);
+addSteppedTower(-64, 14, 7.6, 7.2, 20, 13, 6, 3, 1);
+addSteppedTower(64, -14, 7.6, 7.2, 24, 15, 8, 0, 2);
+addSteppedTower(64, 14, 7.6, 7.2, 21, 14, 7, 1, 3);
+
+// 3. 红绿灯与四条公路（每条道路约 3 辆车，共 12 辆）
+addTrafficLight(-6.2, 6.2, 0, 1);
+addTrafficLight(6.2, -6.2, Math.PI, 1);
+addTrafficLight(-20.2, 19.8, Math.PI / 2, 0);
+addTrafficLight(20.2, -19.8, -Math.PI / 2, 0);
+
+// 公路 X = -24（3 辆）
+addHighwayCar(-21.8, -34.0, 0, 0x0284c7, 0x22d3ee, 8.2, 'z', 1);
+addHighwayCar(-21.8, 4.0, 0, 0x06b6d4, 0x67e8f9, 8.2, 'z', 1);
+addHighwayCar(-26.2, 22.0, Math.PI, 0xd946ef, 0xf472b6, 7.8, 'z', -1);
+
+// 公路 X = +24（3 辆）
+addHighwayCar(21.8, -18.0, 0, 0x16a34a, 0x4ade80, 8.5, 'z', 1);
+addHighwayCar(26.2, -8.0, Math.PI, 0xea580c, 0xfbbf24, 8.0, 'z', -1);
+addHighwayCar(26.2, 32.0, Math.PI, 0xf59e0b, 0xfde68a, 8.0, 'z', -1);
+
+// 公路 Z = -24（3 辆）
+addHighwayCar(-32.0, -21.8, Math.PI / 2, 0x2563eb, 0x38bdf8, 8.0, 'x', 1);
+addHighwayCar(8.0, -21.8, Math.PI / 2, 0x3b82f6, 0x93c5fd, 8.0, 'x', 1);
+addHighwayCar(28.0, -26.2, -Math.PI / 2, 0x7c3aed, 0xc084fc, 7.6, 'x', -1);
+
+// 公路 Z = +24（3 辆）
+addHighwayCar(-28.0, 21.8, Math.PI / 2, 0x0ea5e9, 0x7dd3fc, 8.2, 'x', 1);
+addHighwayCar(-4.0, 26.2, -Math.PI / 2, 0x8b5cf6, 0xddd6fe, 7.8, 'x', -1);
+addHighwayCar(30.0, 26.2, -Math.PI / 2, 0xe11d48, 0xfda4af, 7.8, 'x', -1);
+
+// 精简后的 3 辆破损报废车辆
+addWreckedCar(-6.8, 14.5, 0.35, 2);
+addWreckedCar(18.5, 5.5, -1.55, 1);
+addWreckedCar(-18.5, -14.5, 1.45, 0);
+
+// 4. 路边摆摊与广告牌
+addStreetStall(-6.5, 9.8, 0.12, 2);
+addStreetStall(6.5, -9.8, Math.PI + 0.12, 0);
+addStreetStall(-18.2, 12.5, Math.PI / 2, 1);
+addStreetStall(18.2, -12.5, -Math.PI / 2, 3);
+
+addBillboard(-10.5, 5.2, -7.8, 0, 4.4, 1.6, 'HIGHWAY-01', 'TRAFFIC SIGNALS // 3 CARS/ROAD', '#0b162c', '#22d3ee', '#67e8f9');
+addBillboard(10.5, 5.2, 13.2, Math.PI, 4.4, 1.6, 'RUIN-DISTRICT', 'STAY MOBILE // WATCH SKY', '#26102c', '#f472b6', '#fbcfe8');
+
+// 5. 远景高楼群与外星母舰
+const skylineGroup = new THREE.Group();
+const towerCoords = [
+  [-108, -96, 18, 56, 18, 0], [-74, -114, 20, 70, 20, 1],
+  [-30, -122, 24, 78, 18, 2], [24, -120, 22, 66, 20, 3],
+  [74, -112, 20, 74, 18, 4], [110, -92, 18, 58, 18, 5],
+  [-118, -36, 18, 64, 18, 1], [-122, 30, 20, 60, 20, 2],
+  [118, -30, 18, 62, 18, 3], [122, 36, 20, 68, 18, 4],
+  [-104, 100, 20, 58, 18, 0], [-46, 116, 22, 66, 20, 5],
+  [48, 116, 20, 64, 20, 1], [106, 98, 20, 60, 18, 2]
+];
+towerCoords.forEach(([x, z, w, h, d, mIdx]) => {
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), facadeMats[mIdx]);
+  b.position.set(x, h / 2, z);
+  skylineGroup.add(b);
+});
+
+const mothership = new THREE.Group();
+const shipHull = new THREE.Mesh(
+  new THREE.CylinderGeometry(12, 24, 5.5, 24),
+  new THREE.MeshStandardMaterial({ color: 0x181c30, roughness: 0.35, metalness: 0.85, emissive: 0x7e22ce, emissiveIntensity: 0.3 })
+);
+const shipRing = new THREE.Mesh(
+  new THREE.TorusGeometry(20, 0.6, 10, 36),
+  new THREE.MeshBasicMaterial({ color: 0xc084fc })
+);
+shipRing.rotation.x = Math.PI / 2;
+mothership.add(shipHull, shipRing);
+mothership.position.set(-48, 76, -118);
+skylineGroup.add(mothership);
+scene.add(skylineGroup);
+
+/* ============================================================
+   3B. 天空空战系统（无掉落与地面残骸堆积）
+============================================================ */
+const skyUfos = [];
+const humanJets = [];
+const skyBeams = [];
+
+const ufoPalette = [0x22d3ee, 0xf472b6, 0xfbbf24, 0x34d399, 0xa855f7];
+
+function createUfoMesh(colorHex) {
+  const g = new THREE.Group();
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(1.4, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55),
+    new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.2, metalness: 0.7, emissive: colorHex, emissiveIntensity: 0.25 })
+  );
+  dome.position.y = 0.25;
+  const saucer = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.2, 3.6, 0.85, 22),
+    new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.88 })
+  );
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(3.45, 0.14, 8, 28),
+    new THREE.MeshBasicMaterial({ color: colorHex })
+  );
+  rim.rotation.x = Math.PI / 2;
+  g.add(dome, saucer, rim);
+  return g;
+}
+
+function createHumanJetMesh() {
+  const g = new THREE.Group();
+  const fuselage = new THREE.Mesh(
+    new THREE.ConeGeometry(0.65, 4.4, 8),
+    new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.35, metalness: 0.82 })
+  );
+  fuselage.rotation.x = Math.PI / 2;
+  const wings = new THREE.Mesh(
+    new THREE.BoxGeometry(4.2, 0.12, 1.4),
+    new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4, metalness: 0.78 })
+  );
+  wings.position.z = -0.35;
+  const tailFin = new THREE.Mesh(
+    new THREE.BoxGeometry(0.14, 1.1, 0.9),
+    new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4, metalness: 0.8 })
+  );
+  tailFin.position.set(0, 0.52, -1.35);
+  const thruster = new THREE.Mesh(
+    new THREE.SphereGeometry(0.28, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xf97316 })
+  );
+  thruster.position.z = -2.25;
+  g.add(fuselage, wings, tailFin, thruster);
+  return g;
+}
+
+for (let i = 0; i < 6; i++) {
+  const col = ufoPalette[i % ufoPalette.length];
+  const u = createUfoMesh(col);
+  u.userData = {
+    angle: (i / 6) * Math.PI * 2,
+    radius: 26 + (i % 3) * 14,
+    height: 24 + (i % 4) * 8,
+    speed: 0.34 + (i % 3) * 0.08,
+    color: col,
+    fireTimer: 0.6 + i * 0.4,
+    hp: 65
+  };
+  scene.add(u);
+  skyUfos.push(u);
+}
+
+for (let i = 0; i < 4; i++) {
+  const j = createHumanJetMesh();
+  j.userData = {
+    angle: (i / 4) * Math.PI * 2 + 0.5,
+    radius: 28 + (i % 2) * 14,
+    height: 26 + (i % 3) * 7,
+    speed: -0.44 - (i % 2) * 0.1,
+    fireTimer: 0.5 + i * 0.5,
+    hp: 50
+  };
+  scene.add(j);
+  humanJets.push(j);
+}
+
+function spawnSkyBeam(from, to, colorHex) {
+  const line = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([from.clone(), to.clone()]),
+    new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 })
+  );
+  line.userData = { life: 0.16 };
+  scene.add(line);
+  skyBeams.push(line);
+}
+
+function updateSkyDogfight(dt) {
+  if (dt <= 0) return;
+
+  for (const u of skyUfos) {
+    const ud = u.userData;
+    ud.angle += ud.speed * dt;
+    const x = Math.cos(ud.angle) * ud.radius;
+    const z = Math.sin(ud.angle) * ud.radius;
+    const y = ud.height + Math.sin(performance.now() * 0.002 + ud.angle * 2) * 2.5;
+    u.position.set(x, y, z);
+    u.rotation.y += dt * 1.8;
+
+    ud.fireTimer -= dt;
+    if (ud.fireTimer <= 0 && humanJets.length > 0) {
+      ud.fireTimer = 0.75 + Math.random() * 0.6;
+      const targetJet = humanJets[Math.floor(Math.random() * humanJets.length)];
+      spawnSkyBeam(u.position, targetJet.position, ud.color);
+      targetJet.userData.hp -= 18;
+      if (targetJet.userData.hp <= 0) {
+        spawnParticles(targetJet.position, 0xff7722, 14, 5.5, 0.45);
+        targetJet.userData.hp = 55;
+        targetJet.userData.angle += Math.PI * 0.7;
+      }
+    }
+  }
+
+  for (const j of humanJets) {
+    const jd = j.userData;
+    jd.angle += jd.speed * dt;
+    const nx = Math.cos(jd.angle) * jd.radius;
+    const nz = Math.sin(jd.angle) * jd.radius;
+    const ny = jd.height + Math.cos(performance.now() * 0.0024 + jd.angle) * 2.2;
+    const prev = j.position.clone();
+    j.position.set(nx, ny, nz);
+    if (prev.lengthSq() > 0.1) j.lookAt(nx + (nx - prev.x), ny + (ny - prev.y), nz + (nz - prev.z));
+
+    jd.fireTimer -= dt;
+    if (jd.fireTimer <= 0 && skyUfos.length > 0) {
+      jd.fireTimer = 0.8 + Math.random() * 0.65;
+      const targetUfo = skyUfos[Math.floor(Math.random() * skyUfos.length)];
+      spawnSkyBeam(j.position, targetUfo.position, 0xfbbf24);
+      targetUfo.userData.hp -= 16;
+      if (targetUfo.userData.hp <= 0) {
+        spawnParticles(targetUfo.position, targetUfo.userData.color, 14, 5.5, 0.45);
+        targetUfo.userData.hp = 65;
+        targetUfo.userData.angle += Math.PI * 0.65;
+      }
+    }
+  }
+
+  for (let i = skyBeams.length - 1; i >= 0; i--) {
+    const b = skyBeams[i];
+    b.userData.life -= dt;
+    b.material.opacity = Math.max(0, b.userData.life / 0.16);
+    if (b.userData.life <= 0) {
+      scene.remove(b);
+      skyBeams.splice(i, 1);
+    }
+  }
+
+  const nowSec = performance.now() * 0.001;
+  const xSig = getSignalForAxis('x', nowSec);
+  const zSig = getSignalForAxis('z', nowSec);
+
+  for (const tl of trafficLights) {
+    const sig = tl.groupId === 0 ? xSig : zSig;
+    tl.state = sig;
+    tl.redLight.material.color.setHex(sig === 'red' ? 0xff2d55 : 0x450a16);
+    tl.yellowLight.material.color.setHex(sig === 'yellow' ? 0xfbbf24 : 0x422006);
+    tl.greenLight.material.color.setHex(sig === 'green' ? 0x10b981 : 0x062e22);
+  }
+}
 
 const barrelGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 14);
 const barrelMat = new THREE.MeshStandardMaterial({
   color: 0x5c1422, roughness: 0.35, metalness: 0.65,
-  emissive: 0xff2a44, emissiveIntensity: 0.5
+  emissive: 0xe11d48, emissiveIntensity: 0.42
 });
 function spawnBarrel(x, z) {
   const b = new THREE.Mesh(barrelGeo, barrelMat.clone());
   b.position.set(x, 0.7, z);
-  b.castShadow = true;
-  b.receiveShadow = true;
-  const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.53, 0.53, 0.16, 14), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+  b.castShadow = true; b.receiveShadow = true;
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.53, 0.53, 0.16, 14), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
   ring.position.y = 0.25;
   b.add(ring);
   b.userData = { isBarrel: true, hp: 35 };
@@ -625,20 +1401,21 @@ function spawnBarrel(x, z) {
   barrels.push(b);
 }
 [
-  [-8, -8], [8, 8], [-18, 9], [18, -9],
-  [9, -19], [-9, 19], [-28, -14], [28, 14]
+  [-6.5, -6.5], [6.5, 6.5], [-16, 6.5], [16, -6.5],
+  [8, -18], [-8, 18], [-28, -12], [28, 12],
+  [-20, -24], [20, 24]
 ].forEach(([x, z]) => spawnBarrel(x, z));
 
 const dustGeo = new THREE.BufferGeometry();
-const dustCount = 550;
+const dustCount = 480;
 const dustPos = new Float32Array(dustCount * 3);
 for (let i = 0; i < dustCount; i++) {
   dustPos[i * 3] = (Math.random() - 0.5) * ARENA * 2;
-  dustPos[i * 3 + 1] = Math.random() * 9 + 0.4;
+  dustPos[i * 3 + 1] = Math.random() * 11 + 0.4;
   dustPos[i * 3 + 2] = (Math.random() - 0.5) * ARENA * 2;
 }
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x55d6ff, size: 0.065, transparent: true, opacity: 0.55 }));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.055, transparent: true, opacity: 0.42 }));
 scene.add(dust);
 
 /* ============================================================
@@ -675,28 +1452,20 @@ function createCyberBullpupSkinTexture() {
   }
 
   const neonGrad = ctx.createLinearGradient(0, 120, 512, 380);
-  neonGrad.addColorStop(0, '#00f5ff');
+  neonGrad.addColorStop(0, '#06b6d4');
   neonGrad.addColorStop(0.5, '#38bdf8');
-  neonGrad.addColorStop(1, '#e879f9');
+  neonGrad.addColorStop(1, '#c026d3');
   ctx.fillStyle = neonGrad;
 
   ctx.beginPath();
-  ctx.moveTo(28, 360);
-  ctx.lineTo(135, 130);
-  ctx.lineTo(165, 130);
-  ctx.lineTo(58, 360);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(28, 360); ctx.lineTo(135, 130); ctx.lineTo(165, 130); ctx.lineTo(58, 360);
+  ctx.closePath(); ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(310, 410);
-  ctx.lineTo(420, 140);
-  ctx.lineTo(445, 140);
-  ctx.lineTo(335, 410);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(310, 410); ctx.lineTo(420, 140); ctx.lineTo(445, 140); ctx.lineTo(335, 410);
+  ctx.closePath(); ctx.fill();
 
-  ctx.fillStyle = '#00f5ff';
+  ctx.fillStyle = '#22d3ee';
   for (let x = 40; x < 470; x += 28) {
     ctx.fillRect(x, 48, 12, 5);
     ctx.fillRect(x + 6, 458, 10, 4);
@@ -725,29 +1494,23 @@ function createShotgunSkinTexture() {
   ctx.fillStyle = '#dce6f7';
   ctx.fillRect(110, 185, 250, 125);
 
-  ctx.strokeStyle = '#9eff00';
+  ctx.strokeStyle = '#84cc16';
   ctx.lineWidth = 10;
   ctx.beginPath();
-  ctx.moveTo(0, 165);
-  ctx.bezierCurveTo(150, 95, 290, 265, 512, 145);
+  ctx.moveTo(0, 165); ctx.bezierCurveTo(150, 95, 290, 265, 512, 145);
   ctx.stroke();
 
-  ctx.strokeStyle = '#b4ff1a';
+  ctx.strokeStyle = '#a3e635';
   ctx.lineWidth = 6;
   ctx.beginPath();
-  ctx.moveTo(0, 345);
-  ctx.bezierCurveTo(180, 415, 330, 255, 512, 355);
+  ctx.moveTo(0, 345); ctx.bezierCurveTo(180, 415, 330, 255, 512, 355);
   ctx.stroke();
 
-  ctx.fillStyle = '#9eff00';
+  ctx.fillStyle = '#84cc16';
   for (let sx = 120; sx < 380; sx += 34) {
     ctx.beginPath();
-    ctx.moveTo(sx, 70);
-    ctx.lineTo(sx + 18, 70);
-    ctx.lineTo(sx + 8, 125);
-    ctx.lineTo(sx - 10, 125);
-    ctx.closePath();
-    ctx.fill();
+    ctx.moveTo(sx, 70); ctx.lineTo(sx + 18, 70); ctx.lineTo(sx + 8, 125); ctx.lineTo(sx - 10, 125);
+    ctx.closePath(); ctx.fill();
   }
 
   const tex = new THREE.CanvasTexture(c);
@@ -761,28 +1524,28 @@ const shotgunSkinTex = createShotgunSkinTexture();
 const weaponPivot = new THREE.Group();
 const gun = new THREE.Group();
 
-const gunAlloy = new THREE.MeshStandardMaterial({ color: 0x1c2538, roughness: 0.24, metalness: 0.9 });
-const gunCarbon = new THREE.MeshStandardMaterial({ color: 0x26324a, roughness: 0.32, metalness: 0.82 });
+const gunAlloy = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.26, metalness: 0.88 });
+const gunCarbon = new THREE.MeshStandardMaterial({ color: 0x26324a, roughness: 0.34, metalness: 0.8 });
 const gunAccentMat = new THREE.MeshStandardMaterial({ color: 0x121826, roughness: 0.38, metalness: 0.85 });
-const gunNeonMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
-const gunGlowCoreMat = new THREE.MeshBasicMaterial({ color: 0x7df9ff });
+const gunNeonMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+const gunGlowCoreMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
 
 const rifleBodyMat = new THREE.MeshStandardMaterial({
-  map: bullpupSkinTex, roughness: 0.26, metalness: 0.78,
-  emissive: 0x0284c7, emissiveIntensity: 0.24
+  map: bullpupSkinTex, roughness: 0.28, metalness: 0.78,
+  emissive: 0x0369a1, emissiveIntensity: 0.14
 });
 const rifleChromeMat = new THREE.MeshStandardMaterial({
-  color: 0x94a3b8, roughness: 0.2, metalness: 0.94,
-  emissive: 0x00f5ff, emissiveIntensity: 0.12
+  color: 0x94a3b8, roughness: 0.22, metalness: 0.92,
+  emissive: 0x0284c7, emissiveIntensity: 0.08
 });
-const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
-const neonPinkMat = new THREE.MeshBasicMaterial({ color: 0xff2d8f });
+const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+const neonPinkMat = new THREE.MeshBasicMaterial({ color: 0xd946ef });
 
 const shotgunSkinMat = new THREE.MeshStandardMaterial({
-  map: shotgunSkinTex, roughness: 0.3, metalness: 0.68,
-  emissive: 0x4d7c0f, emissiveIntensity: 0.14
+  map: shotgunSkinTex, roughness: 0.32, metalness: 0.68,
+  emissive: 0x3f6212, emissiveIntensity: 0.1
 });
-const limeTrimMat = new THREE.MeshBasicMaterial({ color: 0x9eff00 });
+const limeTrimMat = new THREE.MeshBasicMaterial({ color: 0x84cc16 });
 const buttPadMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.45, metalness: 0.2 });
 
 const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.125, 0.44), gunCarbon);
@@ -791,18 +1554,14 @@ receiver.position.set(0, 0.01, -0.04);
 const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.02, 0.48), gunAlloy);
 topRail.position.set(0, 0.076, -0.1);
 
-// A. [1] 无托赛博荧光脉冲步枪
+// A. [1] 无托赛博脉冲步枪
 const rifleModelGroup = new THREE.Group();
-
 const carryBridgeTop = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.022, 0.44), gunAlloy);
 carryBridgeTop.position.set(0, 0.118, -0.16);
-
 const carryPostFront = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.045, 0.045), rifleBodyMat);
 carryPostFront.position.set(0, 0.092, -0.34);
-
 const carryPostRear = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.045, 0.045), rifleBodyMat);
 carryPostRear.position.set(0, 0.092, 0.02);
-
 const carryNeonStrip = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.008, 0.38), neonCyanMat);
 carryNeonStrip.position.set(0, 0.131, -0.16);
 
@@ -814,75 +1573,49 @@ const holoReticleDot = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.006)
 holoReticleDot.position.set(0, 0.142, -0.18);
 
 const rifleBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.019, 0.34, 14), rifleChromeMat);
-rifleBarrel.rotation.x = Math.PI / 2;
-rifleBarrel.position.set(0, 0.036, -0.53);
-
+rifleBarrel.rotation.x = Math.PI / 2; rifleBarrel.position.set(0, 0.036, -0.53);
 const rifleBarrelNeon = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.008, 0.30, 10), neonCyanMat);
-rifleBarrelNeon.rotation.x = Math.PI / 2;
-rifleBarrelNeon.position.set(0, 0.056, -0.52);
-
+rifleBarrelNeon.rotation.x = Math.PI / 2; rifleBarrelNeon.position.set(0, 0.056, -0.52);
 const rifleMuzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.02, 0.075, 12), gunAlloy);
-rifleMuzzle.rotation.x = Math.PI / 2;
-rifleMuzzle.position.set(0, 0.036, -0.72);
+rifleMuzzle.rotation.x = Math.PI / 2; rifleMuzzle.position.set(0, 0.036, -0.72);
 
 const rifleChassis = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.125, 0.56), rifleBodyMat);
 rifleChassis.position.set(0, 0.015, -0.06);
-
 const lowerForeFrame = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.024, 0.24), gunAlloy);
 lowerForeFrame.position.set(0, -0.062, -0.26);
-
 const foreGuardAngled = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.024, 0.12), rifleBodyMat);
-foreGuardAngled.position.set(0, -0.038, -0.14);
-foreGuardAngled.rotation.x = -0.38;
+foreGuardAngled.position.set(0, -0.038, -0.14); foreGuardAngled.rotation.x = -0.38;
 
 const sideNeonLeftTop = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.012, 0.44), neonCyanMat);
 sideNeonLeftTop.position.set(-0.051, 0.055, -0.08);
-
 const sideNeonLeftBot = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.01, 0.34), neonPinkMat);
 sideNeonLeftBot.position.set(-0.051, -0.022, -0.10);
-
-const sideNeonRightTop = sideNeonLeftTop.clone();
-sideNeonRightTop.position.x = 0.051;
-
-const sideNeonRightBot = sideNeonLeftBot.clone();
-sideNeonRightBot.position.x = 0.051;
+const sideNeonRightTop = sideNeonLeftTop.clone(); sideNeonRightTop.position.x = 0.051;
+const sideNeonRightBot = sideNeonLeftBot.clone(); sideNeonRightBot.position.x = 0.051;
 
 const boltAssembly = new THREE.Group();
 const boltCarrier = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.034, 0.13), rifleChromeMat);
 boltCarrier.position.set(-0.048, 0.026, -0.14);
-
 const boltChargingHandle = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.02, 0.026), neonPinkMat);
 boltChargingHandle.position.set(-0.062, 0.028, -0.14);
-
 const boltGlowStrip = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.01, 0.10), neonCyanMat);
 boltGlowStrip.position.set(-0.064, 0.026, -0.14);
-
 boltAssembly.add(boltCarrier, boltChargingHandle, boltGlowStrip);
 
 const rifleMagGroup = new THREE.Group();
 rifleMagGroup.position.set(0, -0.05, 0.06);
-
 const rifleMagBody = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.185, 0.095), rifleBodyMat);
-rifleMagBody.position.set(0, -0.09, 0);
-rifleMagBody.rotation.x = -0.22;
-
+rifleMagBody.position.set(0, -0.09, 0); rifleMagBody.rotation.x = -0.22;
 const rifleMagNeonEdge = new THREE.Mesh(new THREE.BoxGeometry(0.064, 0.15, 0.012), neonCyanMat);
-rifleMagNeonEdge.position.set(0, -0.09, 0.046);
-rifleMagNeonEdge.rotation.x = -0.22;
-
+rifleMagNeonEdge.position.set(0, -0.09, 0.046); rifleMagNeonEdge.rotation.x = -0.22;
 const rifleMagBasePlate = new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.022, 0.105), gunAlloy);
-rifleMagBasePlate.position.set(0, -0.182, 0.02);
-rifleMagBasePlate.rotation.x = -0.22;
-
+rifleMagBasePlate.position.set(0, -0.182, 0.02); rifleMagBasePlate.rotation.x = -0.22;
 rifleMagGroup.add(rifleMagBody, rifleMagNeonEdge, rifleMagBasePlate);
 
 const rifleGrip = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.125, 0.072), gunAlloy);
-rifleGrip.position.set(0, -0.095, -0.11);
-rifleGrip.rotation.x = 0.24;
-
+rifleGrip.position.set(0, -0.095, -0.11); rifleGrip.rotation.x = 0.24;
 const rifleButtPad = new THREE.Mesh(new THREE.BoxGeometry(0.104, 0.145, 0.035), gunAlloy);
 rifleButtPad.position.set(0, 0.01, 0.23);
-
 const rifleButtNeon = new THREE.Mesh(new THREE.BoxGeometry(0.108, 0.125, 0.008), neonCyanMat);
 rifleButtNeon.position.set(0, 0.01, 0.249);
 
@@ -895,98 +1628,60 @@ rifleModelGroup.add(
   boltAssembly, rifleMagGroup, rifleGrip, rifleButtPad, rifleButtNeon
 );
 
-// B. [2] 等离霰弹枪专属建模
+// B. [2] 等离霰弹枪
 const shotgunModelGroup = new THREE.Group();
-
 const sgBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.023, 0.46, 14), shotgunSkinMat);
-sgBarrel.rotation.x = Math.PI / 2;
-sgBarrel.position.set(0, 0.036, -0.44);
-
+sgBarrel.rotation.x = Math.PI / 2; sgBarrel.position.set(0, 0.036, -0.44);
 const sgMuzzleLime = new THREE.Mesh(new THREE.CylinderGeometry(0.0225, 0.0225, 0.045, 14), limeTrimMat);
-sgMuzzleLime.rotation.x = Math.PI / 2;
-sgMuzzleLime.position.set(0, 0.036, -0.66);
-
+sgMuzzleLime.rotation.x = Math.PI / 2; sgMuzzleLime.position.set(0, 0.036, -0.66);
 const sgTubeMag = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.019, 0.42, 12), gunAlloy);
-sgTubeMag.rotation.x = Math.PI / 2;
-sgTubeMag.position.set(0, 0.004, -0.42);
-
+sgTubeMag.rotation.x = Math.PI / 2; sgTubeMag.position.set(0, 0.004, -0.42);
 const sgPumpForend = new THREE.Mesh(new THREE.BoxGeometry(0.098, 0.076, 0.25), shotgunSkinMat);
 sgPumpForend.position.set(0, -0.012, -0.34);
-
 const sgPumpLimeStripe = new THREE.Mesh(new THREE.BoxGeometry(0.102, 0.014, 0.22), limeTrimMat);
 sgPumpLimeStripe.position.set(0, 0.016, -0.34);
-
 const sgReceiver = new THREE.Mesh(new THREE.BoxGeometry(0.108, 0.122, 0.34), shotgunSkinMat);
 sgReceiver.position.set(0, 0.012, -0.05);
-
 const sgTopLimeBar = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.012, 0.24), limeTrimMat);
 sgTopLimeBar.position.set(0, 0.076, -0.06);
-
 const sgStockBody = new THREE.Mesh(new THREE.BoxGeometry(0.078, 0.115, 0.32), shotgunSkinMat);
-sgStockBody.position.set(0, -0.032, 0.25);
-sgStockBody.rotation.x = -0.18;
-
+sgStockBody.position.set(0, -0.032, 0.25); sgStockBody.rotation.x = -0.18;
 const sgStockPad = new THREE.Mesh(new THREE.BoxGeometry(0.082, 0.125, 0.028), buttPadMat);
-sgStockPad.position.set(0, -0.055, 0.40);
-sgStockPad.rotation.x = -0.25;
-
+sgStockPad.position.set(0, -0.055, 0.40); sgStockPad.rotation.x = -0.25;
 const sgStockLimeTrim = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.012, 0.14), limeTrimMat);
-sgStockLimeTrim.position.set(0, -0.085, 0.35);
-sgStockLimeTrim.rotation.x = -0.22;
+sgStockLimeTrim.position.set(0, -0.085, 0.35); sgStockLimeTrim.rotation.x = -0.22;
 
 shotgunModelGroup.add(
   sgBarrel, sgMuzzleLime, sgTubeMag, sgPumpForend, sgPumpLimeStripe,
   sgReceiver, sgTopLimeBar, sgStockBody, sgStockPad, sgStockLimeTrim
 );
 
-// C. [3] 电磁狙击步枪专属建模
+// C. [3] 电磁狙击步枪
 const sniperModelGroup = new THREE.Group();
-
 const barrelGroup = new THREE.Group();
 const handguardTop = new THREE.Mesh(new THREE.BoxGeometry(0.098, 0.026, 0.34), gunAlloy);
 handguardTop.position.set(0, 0.056, -0.34);
-
 const handguardBot = new THREE.Mesh(new THREE.BoxGeometry(0.092, 0.024, 0.32), gunAccentMat);
 handguardBot.position.set(0, -0.032, -0.34);
-
 const handguardSideL = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.068, 0.32), gunCarbon);
 handguardSideL.position.set(-0.042, 0.012, -0.34);
-
-const handguardSideR = handguardSideL.clone();
-handguardSideR.position.x = 0.042;
-
+const handguardSideR = handguardSideL.clone(); handguardSideR.position.x = 0.042;
 const handguardCircuitL = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.011, 0.28), gunNeonMat);
 handguardCircuitL.position.set(-0.043, 0.016, -0.35);
-
-const handguardCircuitR = handguardCircuitL.clone();
-handguardCircuitR.position.x = 0.043;
-
+const handguardCircuitR = handguardCircuitL.clone(); handguardCircuitR.position.x = 0.043;
 const mainBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.023, 0.52, 14), gunAlloy);
-mainBarrel.rotation.x = Math.PI / 2;
-mainBarrel.position.set(0, 0.022, -0.58);
-
+mainBarrel.rotation.x = Math.PI / 2; mainBarrel.position.set(0, 0.022, -0.58);
 const energyBarrelCore = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.46, 12), gunNeonMat);
-energyBarrelCore.rotation.x = Math.PI / 2;
-energyBarrelCore.position.set(0, 0.022, -0.56);
-
+energyBarrelCore.rotation.x = Math.PI / 2; energyBarrelCore.position.set(0, 0.022, -0.56);
 const muzzleBrake = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.026, 0.11, 12), gunAccentMat);
-muzzleBrake.rotation.x = Math.PI / 2;
-muzzleBrake.position.set(0, 0.022, -0.87);
-
+muzzleBrake.rotation.x = Math.PI / 2; muzzleBrake.position.set(0, 0.022, -0.87);
 const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.027, 0.004, 8, 20), gunGlowCoreMat);
 muzzleRing.position.set(0, 0.022, -0.825);
-
 const bipodMount = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.022, 0.05), gunAlloy);
 bipodMount.position.set(0, -0.052, -0.44);
-
 const bipodLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.006, 0.16, 8), gunCarbon);
-bipodLegL.position.set(-0.045, -0.11, -0.46);
-bipodLegL.rotation.z = -0.42;
-bipodLegL.rotation.x = 0.25;
-
-const bipodLegR = bipodLegL.clone();
-bipodLegR.position.x = 0.045;
-bipodLegR.rotation.z = 0.42;
+bipodLegL.position.set(-0.045, -0.11, -0.46); bipodLegL.rotation.z = -0.42; bipodLegL.rotation.x = 0.25;
+const bipodLegR = bipodLegL.clone(); bipodLegR.position.x = 0.045; bipodLegR.rotation.z = 0.42;
 
 barrelGroup.add(
   handguardTop, handguardBot, handguardSideL, handguardSideR,
@@ -996,75 +1691,47 @@ barrelGroup.add(
 
 const circuitStripe1 = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.01, 0.34), gunNeonMat);
 circuitStripe1.position.set(0, 0.036, -0.05);
-
 const circuitStripe2 = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.008, 0.18), gunGlowCoreMat);
 circuitStripe2.position.set(0, 0.012, 0.02);
-
 const scopeMount = new THREE.Mesh(new THREE.BoxGeometry(0.064, 0.026, 0.14), gunAlloy);
 scopeMount.position.set(0, 0.098, -0.05);
-
 const scopeTube = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.24, 16), gunCarbon);
-scopeTube.rotation.x = Math.PI / 2;
-scopeTube.position.set(0, 0.128, -0.05);
-
+scopeTube.rotation.x = Math.PI / 2; scopeTube.position.set(0, 0.128, -0.05);
 const scopeRingAccent = new THREE.Mesh(new THREE.TorusGeometry(0.031, 0.0035, 8, 20), gunNeonMat);
 scopeRingAccent.position.set(0, 0.128, 0.055);
-
 const holoScreenFrame = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.072, 0.12), gunGlowCoreMat);
-holoScreenFrame.position.set(0.068, 0.155, -0.06);
-holoScreenFrame.rotation.y = -0.22;
-
+holoScreenFrame.position.set(0.068, 0.155, -0.06); holoScreenFrame.rotation.y = -0.22;
 const holoScreenGlass = new THREE.Mesh(
   new THREE.PlaneGeometry(0.11, 0.064),
   new THREE.MeshBasicMaterial({
-    color: 0x00e5ff, transparent: true, opacity: 0.22,
+    color: 0x06b6d4, transparent: true, opacity: 0.18,
     side: THREE.DoubleSide, depthWrite: false
   })
 );
-holoScreenGlass.position.set(0.066, 0.155, -0.06);
-holoScreenGlass.rotation.y = Math.PI / 2 - 0.22;
+holoScreenGlass.position.set(0.066, 0.155, -0.06); holoScreenGlass.rotation.y = Math.PI / 2 - 0.22;
 
 const mag = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.19, 0.115), gunAlloy);
-mag.position.set(0, -0.135, -0.11);
-mag.rotation.x = -0.22;
-
+mag.position.set(0, -0.135, -0.11); mag.rotation.x = -0.22;
 const magLed1 = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.012, 0.045), gunGlowCoreMat);
-magLed1.position.set(0, -0.095, -0.12);
-magLed1.rotation.x = -0.22;
-
-const magLed2 = magLed1.clone();
-magLed2.position.y = -0.125;
-magLed2.position.z = -0.113;
-
-const magLed3 = magLed1.clone();
-magLed3.position.y = -0.155;
-magLed3.position.z = -0.106;
+magLed1.position.set(0, -0.095, -0.12); magLed1.rotation.x = -0.22;
+const magLed2 = magLed1.clone(); magLed2.position.y = -0.125; magLed2.position.z = -0.113;
+const magLed3 = magLed1.clone(); magLed3.position.y = -0.155; magLed3.position.z = -0.106;
 
 const grip = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.15, 0.085), gunCarbon);
-grip.position.set(0, -0.125, 0.11);
-grip.rotation.x = 0.26;
-
+grip.position.set(0, -0.125, 0.11); grip.rotation.x = 0.26;
 const gripTrim = new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.12, 0.012), gunNeonMat);
-gripTrim.position.set(0, -0.12, 0.148);
-gripTrim.rotation.x = 0.26;
+gripTrim.position.set(0, -0.12, 0.148); gripTrim.rotation.x = 0.26;
 
 const stockUpper = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.026, 0.28), gunCarbon);
 stockUpper.position.set(0, 0.015, 0.30);
-
 const cheekRest = new THREE.Mesh(new THREE.BoxGeometry(0.076, 0.022, 0.14), gunAlloy);
 cheekRest.position.set(0, 0.044, 0.27);
-
 const stockLower = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.022, 0.25), gunAlloy);
-stockLower.position.set(0, -0.115, 0.29);
-stockLower.rotation.x = -0.14;
-
+stockLower.position.set(0, -0.115, 0.29); stockLower.rotation.x = -0.14;
 const stockStrut = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.13, 0.024), gunCarbon);
-stockStrut.position.set(0, -0.05, 0.41);
-stockStrut.rotation.x = -0.22;
-
+stockStrut.position.set(0, -0.05, 0.41); stockStrut.rotation.x = -0.22;
 const buttplate = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.155, 0.024), gunAccentMat);
 buttplate.position.set(0, -0.05, 0.43);
-
 const buttNeon = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.14, 0.008), gunNeonMat);
 buttNeon.position.set(0, -0.05, 0.442);
 
@@ -1076,11 +1743,10 @@ sniperModelGroup.add(
   stockUpper, cheekRest, stockLower, stockStrut, buttplate, buttNeon
 );
 
-// 枪口焰
 const muzzle = new THREE.Mesh(
-  new THREE.PlaneGeometry(0.34, 0.34),
+  new THREE.PlaneGeometry(0.26, 0.26),
   new THREE.MeshBasicMaterial({
-    color: 0x7df9ff, transparent: true, opacity: 0,
+    color: 0x67e8f9, transparent: true, opacity: 0,
     blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
   })
 );
@@ -1094,17 +1760,13 @@ function applyWeaponVisualModel(idx) {
   sniperModelGroup.visible = idx === 2;
 
   if (idx === 0) {
-    receiver.visible = false;
-    topRail.visible = false;
+    receiver.visible = false; topRail.visible = false;
     muzzle.position.set(0, 0.036, -0.78);
   } else if (idx === 1) {
-    receiver.visible = false;
-    topRail.visible = false;
+    receiver.visible = false; topRail.visible = false;
     muzzle.position.set(0, 0.036, -0.71);
   } else {
-    receiver.visible = true;
-    receiver.material = gunCarbon;
-    topRail.visible = true;
+    receiver.visible = true; receiver.material = gunCarbon; topRail.visible = true;
     muzzle.position.set(0, 0.022, -0.94);
   }
 }
@@ -1124,15 +1786,14 @@ const audio = {
   bgmFilter: null,
   bgmTimer: null,
   step: 0,
-  // 暗黑赛博音阶 (D Minor / Dorian 动感纯音乐序列)
   bassNotes: [73.42, 73.42, 73.42, 73.42, 87.31, 87.31, 65.41, 65.41],
   arpNotes: [293.66, 349.23, 440.00, 523.25, 587.33, 523.25, 440.00, 349.23,
              329.63, 392.00, 493.88, 587.33, 659.25, 587.33, 493.88, 392.00],
   padChords: [
-    [146.83, 220.00, 261.63], // Dm7
-    [174.61, 220.00, 261.63], // Fmaj7
-    [130.81, 196.00, 261.63], // C
-    [164.81, 246.94, 293.66]  // Em7b5
+    [146.83, 220.00, 261.63],
+    [174.61, 220.00, 261.63],
+    [130.81, 196.00, 261.63],
+    [164.81, 246.94, 293.66]
   ],
 
   init() {
@@ -1400,7 +2061,7 @@ const audio = {
 };
 
 /* ============================================================
-   6. 多关节敌军建模（随波次/关卡阶段进化）
+   6. 外星人手持激光枪建模（无胸口炮）与等速激光弹道
 ============================================================ */
 const enemies = [];
 const enemyBullets = [];
@@ -1408,8 +2069,9 @@ const pickups = [];
 const particles = [];
 const tracers = [];
 
-const bulletGeo = new THREE.SphereGeometry(0.11, 8, 8);
-const bulletMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
+const laserBoltGeo = new THREE.CylinderGeometry(0.032, 0.032, 0.85, 8);
+laserBoltGeo.rotateX(Math.PI / 2);
+const laserBoltMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
 const particleGeo = new THREE.BoxGeometry(0.07, 0.07, 0.07);
 
 function buildEnemyModel(waveNum, type) {
@@ -1417,115 +2079,103 @@ function buildEnemyModel(waveNum, type) {
   const stage = ((waveNum - 1) % 3);
 
   let armorColor = 0x3a4968;
-  let emissiveColor = 0xff1744;
-  let visorColor = 0x00e5ff;
+  let emissiveColor = 0xe11d48;
+  let visorColor = 0x22d3ee;
   let baseScale = 1.0;
 
   if (stage === 0) {
     armorColor = type === 1 ? 0x5c3a1e : (type === 2 ? 0x2e2559 : 0x4d1828);
-    emissiveColor = type === 1 ? 0xff9100 : (type === 2 ? 0x9d6bff : 0xff2442);
-    visorColor = 0x00e5ff;
+    emissiveColor = type === 1 ? 0xf59e0b : (type === 2 ? 0x8b5cf6 : 0xe11d48);
+    visorColor = 0x22d3ee;
     baseScale = type === 1 ? 1.28 : 1.0;
   } else if (stage === 1) {
     armorColor = type === 1 ? 0x1e4d5c : (type === 2 ? 0x185c45 : 0x263b66);
-    emissiveColor = type === 1 ? 0x00e5ff : (type === 2 ? 0x00ff9d : 0x38bdf8);
-    visorColor = 0xffea00;
+    emissiveColor = type === 1 ? 0x06b6d4 : (type === 2 ? 0x10b981 : 0x38bdf8);
+    visorColor = 0xfacc15;
     baseScale = type === 1 ? 1.35 : 1.05;
   } else {
     armorColor = type === 1 ? 0x5c1928 : (type === 2 ? 0x593818 : 0x3b184d);
-    emissiveColor = type === 1 ? 0xff2d55 : (type === 2 ? 0xffaa00 : 0xe040fb);
-    visorColor = 0xff3d00;
+    emissiveColor = type === 1 ? 0xf43f5e : (type === 2 ? 0xf59e0b : 0xc026d3);
+    visorColor = 0xf97316;
     baseScale = type === 1 ? 1.48 : 1.08;
   }
 
   g.scale.setScalar(baseScale);
 
   const armorMat = new THREE.MeshStandardMaterial({
-    color: armorColor, roughness: 0.34, metalness: 0.78,
-    emissive: emissiveColor, emissiveIntensity: 0.32
+    color: armorColor, roughness: 0.36, metalness: 0.76,
+    emissive: emissiveColor, emissiveIntensity: 0.22
   });
   const jointMat = new THREE.MeshStandardMaterial({
     color: 0x20293d, roughness: 0.45, metalness: 0.85
   });
   const headMat = new THREE.MeshStandardMaterial({
-    color: 0x2b3854, roughness: 0.28, metalness: 0.85,
-    emissive: emissiveColor, emissiveIntensity: 0.35
+    color: 0x2b3854, roughness: 0.3, metalness: 0.85,
+    emissive: emissiveColor, emissiveIntensity: 0.25
   });
+  const laserGunMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b, roughness: 0.28, metalness: 0.9
+  });
+  const laserGlowMat = new THREE.MeshBasicMaterial({ color: emissiveColor });
 
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.92, 0.44), armorMat);
-  torso.position.y = 1.12;
-  torso.castShadow = true;
-  torso.userData = { part: 'body' };
-  g.add(torso);
+  torso.position.y = 1.12; torso.castShadow = true; torso.userData = { part: 'body' }; g.add(torso);
 
-  const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.45, 0.5), jointMat);
-  chestPlate.position.set(0, 1.25, 0.02);
-  chestPlate.userData = { part: 'body' };
-  g.add(chestPlate);
+  const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.45, 0.48), jointMat);
+  chestPlate.position.set(0, 1.25, 0.01); chestPlate.userData = { part: 'body' }; g.add(chestPlate);
 
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.4), headMat);
-  head.position.y = 1.8;
-  head.castShadow = true;
-  head.userData = { part: 'head' };
-  g.add(head);
+  head.position.y = 1.8; head.castShadow = true; head.userData = { part: 'head' }; g.add(head);
 
   const visor = new THREE.Mesh(
     new THREE.BoxGeometry(0.34, 0.11, 0.06),
     new THREE.MeshBasicMaterial({ color: visorColor })
   );
-  visor.position.set(0, 1.8, 0.2);
-  visor.userData = { part: 'head' };
-  g.add(visor);
+  visor.position.set(0, 1.8, 0.2); visor.userData = { part: 'head' }; g.add(visor);
 
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.72, 0.22), jointMat);
-  armL.position.set(-0.5, 1.12, 0.08);
-  armL.rotation.x = -0.35;
-  armL.userData = { part: 'body' };
-
-  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.72, 0.22), jointMat);
-  armR.position.set(0.5, 1.12, 0.15);
-  armR.rotation.x = -0.65;
-  armR.userData = { part: 'body' };
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.66, 0.2), jointMat);
+  armL.position.set(-0.46, 1.14, 0.24); armL.rotation.set(-0.95, 0.32, 0); armL.userData = { part: 'body' };
+  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.66, 0.2), jointMat);
+  armR.position.set(0.46, 1.14, 0.24); armR.rotation.set(-1.15, -0.15, 0); armR.userData = { part: 'body' };
   g.add(armL, armR);
+
+  const laserGunGroup = new THREE.Group();
+  const lgBody = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.16, 0.56), laserGunMat);
+  lgBody.position.set(0, 0, 0.14);
+  const lgBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.038, 0.42, 10), laserGunMat);
+  lgBarrel.rotation.x = Math.PI / 2;
+  lgBarrel.position.set(0, 0.02, 0.52);
+  const lgStrip = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.035, 0.48), laserGlowMat);
+  lgStrip.position.set(0, 0.04, 0.22);
+  const lgMuzzle = new THREE.Object3D();
+  lgMuzzle.position.set(0, 0.02, 0.76);
+  laserGunGroup.add(lgBody, lgBarrel, lgStrip, lgMuzzle);
+  laserGunGroup.position.set(0.34, 1.16, 0.36);
+  g.add(laserGunGroup);
 
   if (stage === 0) {
     const pauldronL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.34), armorMat);
-    pauldronL.position.set(-0.5, 1.48, 0);
-    pauldronL.userData = { part: 'body' };
-    const pauldronR = pauldronL.clone();
-    pauldronR.position.x = 0.5;
+    pauldronL.position.set(-0.5, 1.48, 0); pauldronL.userData = { part: 'body' };
+    const pauldronR = pauldronL.clone(); pauldronR.position.x = 0.5;
     g.add(pauldronL, pauldronR);
   } else if (stage === 1) {
     const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.12, 0.14), armorMat);
-    wingL.position.set(-0.52, 1.45, -0.26);
-    wingL.rotation.z = 0.35;
-    wingL.userData = { part: 'body' };
-    const wingR = wingL.clone();
-    wingR.position.x = 0.52;
-    wingR.rotation.z = -0.35;
+    wingL.position.set(-0.52, 1.45, -0.26); wingL.rotation.z = 0.35; wingL.userData = { part: 'body' };
+    const wingR = wingL.clone(); wingR.position.x = 0.52; wingR.rotation.z = -0.35;
     const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: visorColor }));
     fin.position.set(0, 2.08, -0.02);
     g.add(wingL, wingR, fin);
   } else {
     const podL = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.52), jointMat);
-    podL.position.set(-0.56, 1.56, 0.04);
-    podL.userData = { part: 'body' };
-    const podR = podL.clone();
-    podR.position.x = 0.56;
-    const core = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 12), new THREE.MeshBasicMaterial({ color: emissiveColor }));
-    core.position.set(0, 1.24, 0.25);
-    g.add(podL, podR, core);
+    podL.position.set(-0.56, 1.56, 0.04); podL.userData = { part: 'body' };
+    const podR = podL.clone(); podR.position.x = 0.56;
+    g.add(podL, podR);
   }
 
   const legL = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.68, 0.26), jointMat);
-  legL.position.set(-0.2, 0.34, 0);
-  legL.castShadow = true;
-  legL.userData = { part: 'body' };
-
+  legL.position.set(-0.2, 0.34, 0); legL.castShadow = true; legL.userData = { part: 'body' };
   const legR = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.68, 0.26), jointMat);
-  legR.position.set(0.2, 0.34, 0);
-  legR.castShadow = true;
-  legR.userData = { part: 'body' };
+  legR.position.set(0.2, 0.34, 0); legR.castShadow = true; legR.userData = { part: 'body' };
   g.add(legL, legR);
 
   const hpBg = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.09), new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }));
@@ -1534,7 +2184,7 @@ function buildEnemyModel(waveNum, type) {
   hpFill.position.set(0, 2.28, 0.01);
   g.add(hpBg, hpFill);
 
-  return { group: g, armorMat, headMat, hpFill, legL, legR, stage };
+  return { group: g, armorMat, headMat, hpFill, legL, legR, laserGunGroup, lgMuzzle, stage, radius: 0.62 * baseScale };
 }
 
 function spawnEnemy() {
@@ -1549,29 +2199,44 @@ function spawnEnemy() {
 
   let x, z;
   do {
-    x = (Math.random() - 0.5) * (ARENA * 1.82);
-    z = (Math.random() - 0.5) * (ARENA * 1.82);
-  } while (Math.hypot(x - player.pos.x, z - player.pos.z) < 16 || checkCircleObstacle(x, z, 1.0));
+    x = (Math.random() - 0.5) * (ARENA * 1.72);
+    z = (Math.random() - 0.5) * (ARENA * 1.72);
+  } while (Math.hypot(x - player.pos.x, z - player.pos.z) < 20 || checkCircleObstacle(x, z, built.radius + 0.45));
 
   g.position.set(x, 0, z);
 
-  const maxHp = (type === 1 ? 250 : (type === 2 ? 90 : 105)) + currentWave * 14;
+  const level = currentWave + (type === 1 ? 2 : (type === 2 ? 1 : 0));
+  const baseSpeed = type === 1 ? 3.2 : (type === 0 ? 4.4 : 3.7);
+  const chaseSpeed = baseSpeed + (level - 1) * 0.45;
+  const patrolSpeed = chaseSpeed * 0.55;
+  const bulletDmg = Math.round((type === 1 ? 16 : (type === 2 ? 12 : 10)) * (1 + (level - 1) * 0.16));
+  const meleeDmg = Math.round((type === 1 ? 24 : 15) * (1 + (level - 1) * 0.16));
+
+  const initAngle = Math.random() * Math.PI * 2;
   g.userData = {
     isEnemy: true,
     type,
+    level,
     stage: built.stage,
-    hp: maxHp,
-    maxHp,
-    speed: (type === 1 ? 1.8 : (type === 0 ? 3.7 : 2.5)) + Math.min(1.6, currentWave * 0.08),
-    strafeDir: Math.random() > 0.5 ? 1 : -1,
-    strafeTimer: 1 + Math.random() * 2,
+    radius: built.radius,
+    hp: (type === 1 ? 250 : (type === 2 ? 90 : 105)) + currentWave * 14,
+    maxHp: (type === 1 ? 250 : (type === 2 ? 90 : 105)) + currentWave * 14,
+    patrolSpeed,
+    chaseSpeed,
+    bulletDmg,
+    meleeDmg,
+    alerted: false,
+    patrolDir: new THREE.Vector3(Math.cos(initAngle), 0, Math.sin(initAngle)),
+    patrolTimer: 1.5 + Math.random() * 2.5,
     cooldown: 0,
-    shootCd: 1.2 + Math.random(),
+    shootCd: 0.7 + Math.random() * 0.7,
     bodyMat: built.armorMat,
     headMat: built.headMat,
     hpFill: built.hpFill,
     legL: built.legL,
     legR: built.legR,
+    laserGunGroup: built.laserGunGroup,
+    lgMuzzle: built.lgMuzzle,
     walkPhase: Math.random() * 6,
     flash: 0
   };
@@ -1583,7 +2248,7 @@ function spawnPickup(pos) {
   if (Math.random() > 0.45) return;
   const isShield = Math.random() > 0.45;
   const g = new THREE.Group();
-  const col = isShield ? 0x00e5ff : 0x00e676;
+  const col = isShield ? 0x06b6d4 : 0x10b981;
   const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), new THREE.MeshBasicMaterial({ color: col }));
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.48, 24), new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide }));
   ring.rotation.x = Math.PI / 2;
@@ -1595,24 +2260,127 @@ function spawnPickup(pos) {
 }
 
 /* ============================================================
-   7. 碰撞、粒子、爆炸与射击判定
+   7. 严密实体防穿模、红绿灯车流更新、粒子、爆炸与射击判定
 ============================================================ */
 function checkCircleObstacle(x, z, r) {
   if (Math.abs(x) > ARENA - r || Math.abs(z) > ARENA - r) return true;
   for (const c of colliders) {
-    if (c.height < 1.2) continue;
+    if (c.height < 0.8) continue;
     const cx = Math.max(c.minX, Math.min(x, c.maxX));
     const cz = Math.max(c.minZ, Math.min(z, c.maxZ));
-    if (Math.hypot(x - cx, z - cz) < r) return true;
+    const dx = x - cx;
+    const dz = z - cz;
+    if (dx * dx + dz * dz < r * r) return true;
   }
   return false;
 }
 
 function resolveMovement(pos, dx, dz, radius) {
-  const nx = pos.x + dx;
-  if (!checkCircleObstacle(nx, pos.z, radius)) pos.x = nx;
-  const nz = pos.z + dz;
-  if (!checkCircleObstacle(pos.x, nz, radius)) pos.z = nz;
+  const totalDist = Math.hypot(dx, dz);
+  const steps = Math.max(1, Math.ceil(totalDist / 0.14));
+  const sx = dx / steps;
+  const sz = dz / steps;
+
+  for (let s = 0; s < steps; s++) {
+    const nx = pos.x + sx;
+    if (!checkCircleObstacle(nx, pos.z, radius)) pos.x = nx;
+    const nz = pos.z + sz;
+    if (!checkCircleObstacle(pos.x, nz, radius)) pos.z = nz;
+  }
+
+  pos.x = THREE.MathUtils.clamp(pos.x, -ARENA + radius, ARENA - radius);
+  pos.z = THREE.MathUtils.clamp(pos.z, -ARENA + radius, ARENA - radius);
+  for (const c of colliders) {
+    if (c.height < 0.8) continue;
+    const cx = Math.max(c.minX, Math.min(pos.x, c.maxX));
+    const cz = Math.max(c.minZ, Math.min(pos.z, c.maxZ));
+    let vx = pos.x - cx;
+    let vz = pos.z - cz;
+    const d = Math.hypot(vx, vz);
+    if (d < radius) {
+      if (d > 0.0001) {
+        const push = radius - d;
+        pos.x += (vx / d) * push;
+        pos.z += (vz / d) * push;
+      } else {
+        pos.z += radius;
+      }
+    }
+  }
+}
+
+function shouldStopAtSignal(hc, nowSec) {
+  const signal = getSignalForAxis(hc.axis, nowSec);
+  if (signal === 'green') return false;
+
+  const stopLineDist = 11.5; // 路口中心在 ±24，停止线在距路口 11.5m 处（即 ±12.5 附近）
+  const intersections = [-24, 24];
+
+  if (hc.axis === 'z') {
+    const z = hc.mesh.position.z;
+    const noseZ = z + hc.dir * hc.hd;
+    for (const inter of intersections) {
+      if (hc.dir > 0 && noseZ < inter - 2.0 && (inter - noseZ) < stopLineDist) return true;
+      if (hc.dir < 0 && noseZ > inter + 2.0 && (noseZ - inter) < stopLineDist) return true;
+    }
+  } else {
+    const x = hc.mesh.position.x;
+    const noseX = x + hc.dir * hc.hw;
+    for (const inter of intersections) {
+      if (hc.dir > 0 && noseX < inter - 2.0 && (inter - noseX) < stopLineDist) return true;
+      if (hc.dir < 0 && noseX > inter + 2.0 && (noseX - inter) < stopLineDist) return true;
+    }
+  }
+  return false;
+}
+
+function hasCarAhead(hc) {
+  const safeGap = 8.2;
+  for (const other of highwayCars) {
+    if (other === hc || other.axis !== hc.axis || other.dir !== hc.dir) continue;
+    if (hc.axis === 'z') {
+      if (Math.abs(other.mesh.position.x - hc.mesh.position.x) > 1.8) continue;
+      const delta = (other.mesh.position.z - hc.mesh.position.z) * hc.dir;
+      if (delta > 0 && delta < safeGap) return true;
+    } else {
+      if (Math.abs(other.mesh.position.z - hc.mesh.position.z) > 1.8) continue;
+      const delta = (other.mesh.position.x - hc.mesh.position.x) * hc.dir;
+      if (delta > 0 && delta < safeGap) return true;
+    }
+  }
+  return false;
+}
+
+function updateHighwayCars(dt) {
+  if (dt <= 0) return;
+  const nowSec = performance.now() * 0.001;
+
+  for (const hc of highwayCars) {
+    const mustStop = shouldStopAtSignal(hc, nowSec) || hasCarAhead(hc);
+    const targetSpeed = mustStop ? 0 : hc.maxSpeed;
+    const accel = mustStop ? 24.0 : 12.0;
+    if (hc.curSpeed < targetSpeed) {
+      hc.curSpeed = Math.min(targetSpeed, hc.curSpeed + accel * dt);
+    } else if (hc.curSpeed > targetSpeed) {
+      hc.curSpeed = Math.max(targetSpeed, hc.curSpeed - accel * dt);
+    }
+
+    const moveDelta = hc.curSpeed * hc.dir * dt;
+    if (hc.axis === 'z') {
+      hc.mesh.position.z += moveDelta;
+      if (hc.mesh.position.z > ARENA - 6) hc.mesh.position.z = -ARENA + 6;
+      if (hc.mesh.position.z < -ARENA + 6) hc.mesh.position.z = ARENA - 6;
+    } else {
+      hc.mesh.position.x += moveDelta;
+      if (hc.mesh.position.x > ARENA - 6) hc.mesh.position.x = -ARENA + 6;
+      if (hc.mesh.position.x < -ARENA + 6) hc.mesh.position.x = ARENA - 6;
+    }
+
+    hc.collider.minX = hc.mesh.position.x - hc.hw;
+    hc.collider.maxX = hc.mesh.position.x + hc.hw;
+    hc.collider.minZ = hc.mesh.position.z - hc.hd;
+    hc.collider.maxZ = hc.mesh.position.z + hc.hd;
+  }
 }
 
 function spawnParticles(pos, color, count, speed, life = 0.55) {
@@ -1627,7 +2395,7 @@ function spawnParticles(pos, color, count, speed, life = 0.55) {
   }
 }
 
-function spawnTracer(from, to, color = 0x7df9ff) {
+function spawnTracer(from, to, color = 0x67e8f9) {
   const geo = new THREE.BufferGeometry().setFromPoints([from, to]);
   const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95 }));
   line.userData = { life: 0.09 };
@@ -1657,6 +2425,21 @@ function detonateBarrel(barrel) {
 }
 
 const raycaster = new THREE.Raycaster();
+const losRaycaster = new THREE.Raycaster();
+
+function hasLineOfSightToPlayer(enemyPos) {
+  const origin = new THREE.Vector3(enemyPos.x, 1.45, enemyPos.z);
+  const target = new THREE.Vector3(player.pos.x, player.pos.y - 0.2, player.pos.z);
+  const toPlayer = new THREE.Vector3().subVectors(target, origin);
+  const dist = toPlayer.length();
+  if (dist > 46) return false;
+  toPlayer.normalize();
+  losRaycaster.set(origin, toPlayer);
+  losRaycaster.far = dist;
+  const obstacleMeshes = colliders.filter(c => c.mesh && c.height >= 2.0).map(c => c.mesh);
+  const hits = losRaycaster.intersectObjects(obstacleMeshes, false);
+  return hits.length === 0;
+}
 
 function triggerHitmarker(isCrit) {
   const hm = document.getElementById('hitmarker');
@@ -1685,9 +2468,9 @@ function shoot() {
   audio.shoot(state.weaponIdx);
 
   muzzle.material.color.setHex(w.color);
-  muzzle.material.opacity = 0.95;
+  muzzle.material.opacity = 0.85;
   muzzle.rotation.z = Math.random() * Math.PI * 2;
-  muzzle.scale.setScalar(w.id === 1 ? 1.45 : 1.0);
+  muzzle.scale.setScalar(w.id === 1 ? 1.35 : 0.95);
 
   const muzzleWorld = new THREE.Vector3();
   muzzle.getWorldPosition(muzzleWorld);
@@ -1695,7 +2478,7 @@ function shoot() {
   const shootables = [
     ...enemies.flatMap(e => e.children.filter(c => c.userData.part)),
     ...barrels,
-    ...colliders.map(c => c.mesh)
+    ...colliders.filter(c => c.mesh).map(c => c.mesh)
   ];
 
   const spread = state.ads ? w.adsSpread : w.spread;
@@ -1706,7 +2489,7 @@ function shoot() {
       (Math.random() - 0.5) * spread * 2
     );
     raycaster.setFromCamera(dirOffset, camera);
-    const hits = raycaster.intersectObjects(shootables, false);
+    const hits = raycaster.intersectObjects(shootables, true);
 
     if (hits.length) {
       let endPoint = hits[0].point;
@@ -1752,6 +2535,7 @@ function damageEnemy(enemy, dmg, point, isHeadshot) {
   if (!enemy || enemy.userData.hp <= 0) return;
   enemy.userData.hp -= dmg;
   enemy.userData.flash = 1;
+  enemy.userData.alerted = true;
   audio.hit(isHeadshot);
   triggerHitmarker(isHeadshot);
   spawnParticles(point, isHeadshot ? 0xff2d55 : 0xffd166, isHeadshot ? 14 : 7, 4, 0.4);
@@ -1768,7 +2552,7 @@ function killEnemy(enemy, isHeadshot) {
 
   const pos = enemy.position.clone().setY(1.2);
   spawnParticles(pos, 0xff2d55, 28, 6, 0.7);
-  spawnParticles(pos, 0x00e5ff, 14, 4.5, 0.55);
+  spawnParticles(pos, 0x06b6d4, 14, 4.5, 0.55);
   spawnPickup(enemy.position);
   audio.explode();
   scene.remove(enemy);
@@ -1844,9 +2628,9 @@ function startReload() {
 ============================================================ */
 function getStageTitle(waveNum) {
   const stage = (waveNum - 1) % 3;
-  if (stage === 0) return 'PHASE I // CYBER ASSAULT TROOPERS';
-  if (stage === 1) return 'PHASE II // WINGED RECON MECHS';
-  return 'PHASE III // HEAVY TITAN DREADNOUGHTS';
+  if (stage === 0) return 'PHASE I // HIGHWAY STREET PURSUIT';
+  if (stage === 1) return 'PHASE II // INTERSECTION AMBUSH';
+  return 'PHASE III // SKY WAR OVERFALL';
 }
 
 function updateWave(dt) {
@@ -1856,7 +2640,7 @@ function updateWave(dt) {
     if (state.waveBreak <= 0) {
       state.wave++;
       state.waveBreak = 2.8;
-      state.enemiesToSpawn = 6 + state.wave * 3;
+      state.enemiesToSpawn = 7 + state.wave * 3;
       state.spawnTimer = 0;
       const wStr = String(state.wave).padStart(2, '0');
       showBanner('WAVE ' + wStr, getStageTitle(state.wave));
@@ -1867,7 +2651,7 @@ function updateWave(dt) {
     if (state.spawnTimer <= 0) {
       spawnEnemy();
       state.enemiesToSpawn--;
-      state.spawnTimer = Math.max(0.26, 0.62 - state.wave * 0.03);
+      state.spawnTimer = Math.max(0.24, 0.58 - state.wave * 0.03);
     }
   }
 }
@@ -1984,7 +2768,7 @@ function updateRadar() {
   radarCtx.closePath();
   radarCtx.fill();
 
-  const scale = 1.45;
+  const scale = 1.05;
   const cos = Math.cos(player.yaw);
   const sin = Math.sin(player.yaw);
 
@@ -1997,7 +2781,7 @@ function updateRadar() {
     const clampR = Math.min(64, dist);
     const ang = Math.atan2(rz, rx);
 
-    radarCtx.fillStyle = e.userData.type === 1 ? '#ff9100' : '#ff2d55';
+    radarCtx.fillStyle = e.userData.type === 1 ? '#ff9100' : (e.userData.alerted ? '#ff2d55' : '#f472b6');
     radarCtx.beginPath();
     radarCtx.arc(cx + Math.cos(ang) * clampR, cy + Math.sin(ang) * clampR, e.userData.type === 1 ? 4 : 3, 0, Math.PI * 2);
     radarCtx.fill();
@@ -2046,7 +2830,7 @@ function endGame() {
 }
 
 /* ============================================================
-   11. 玩家、瞄准镜、枪机与换弹夹动画、敌军与主循环更新
+   11. 玩家、瞄准镜、枪机与换弹夹动画、敌军激光枪索敌追击与主循环更新
 ============================================================ */
 function updatePlayer(rawDt) {
   if (state.bulletTime) {
@@ -2142,7 +2926,7 @@ function updatePlayer(rawDt) {
 
   const boltTravel = Math.sin(state.boltKick * Math.PI) * 0.085;
   boltAssembly.position.z = boltTravel;
-  boltGlowStrip.material.color.setHex(state.boltKick > 0.25 ? 0xff2d8f : 0x00f5ff);
+  boltGlowStrip.material.color.setHex(state.boltKick > 0.25 ? 0xd946ef : 0x06b6d4);
 
   if (state.weaponIdx === 0 && state.reloading) {
     const progress = 1 - Math.max(0, state.reloadTimer / Math.max(0.01, state.reloadDuration));
@@ -2207,58 +2991,71 @@ function updatePlayer(rawDt) {
 function updateEnemies(dt) {
   for (const enemy of enemies) {
     const ud = enemy.userData;
+    const eRadius = ud.radius || 0.62;
     const toPlayer = new THREE.Vector3().subVectors(player.pos, enemy.position);
     toPlayer.y = 0;
     const dist = toPlayer.length();
-    toPlayer.normalize();
+    if (dist > 0.001) toPlayer.normalize();
 
-    enemy.lookAt(player.pos.x, 0, player.pos.z);
-
-    ud.strafeTimer -= dt;
-    if (ud.strafeTimer <= 0) {
-      ud.strafeDir *= -1;
-      ud.strafeTimer = 1.2 + Math.random() * 1.8;
+    const canSee = !state.gameOver && hasLineOfSightToPlayer(enemy.position);
+    if (canSee) {
+      ud.alerted = true;
     }
 
-    const moveDir = new THREE.Vector3();
-    if (ud.type === 0 || dist > 16) {
-      moveDir.add(toPlayer);
-    }
-    if (ud.type === 2 && dist < 18) {
-      const side = new THREE.Vector3(-toPlayer.z, 0, toPlayer.x).multiplyScalar(ud.strafeDir * 0.75);
-      moveDir.add(side);
-    }
-    if (moveDir.lengthSq() > 0) {
-      moveDir.normalize();
-      resolveMovement(enemy.position, moveDir.x * ud.speed * dt, moveDir.z * ud.speed * dt, 0.65);
-      ud.walkPhase += dt * ud.speed * 3;
-      ud.legL.rotation.x = Math.sin(ud.walkPhase) * 0.5;
-      ud.legR.rotation.x = -Math.sin(ud.walkPhase) * 0.5;
+    if (ud.alerted && !state.gameOver) {
+      enemy.lookAt(player.pos.x, 0, player.pos.z);
+      const minKeepDist = ud.type === 1 ? 1.85 : 2.6;
+      if (dist > minKeepDist) {
+        resolveMovement(enemy.position, toPlayer.x * ud.chaseSpeed * dt, toPlayer.z * ud.chaseSpeed * dt, eRadius);
+        ud.walkPhase += dt * ud.chaseSpeed * 3.4;
+        ud.legL.rotation.x = Math.sin(ud.walkPhase) * 0.62;
+        ud.legR.rotation.x = -Math.sin(ud.walkPhase) * 0.62;
+      }
+
+      ud.shootCd -= dt;
+      if (canSee && dist < 44 && ud.shootCd <= 0) {
+        ud.shootCd = Math.max(0.55, (ud.type === 1 ? 1.25 : 1.55) - (ud.level - 1) * 0.06);
+        const from = new THREE.Vector3();
+        ud.lgMuzzle.getWorldPosition(from);
+        const aimDir = new THREE.Vector3().subVectors(player.pos, from).normalize();
+
+        const b = new THREE.Mesh(laserBoltGeo, laserBoltMat);
+        b.position.copy(from);
+        b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), aimDir);
+        b.userData = { vel: aimDir.multiplyScalar(PLAYER_BULLET_SPEED), dmg: ud.bulletDmg, life: 2.2 };
+        scene.add(b);
+        enemyBullets.push(b);
+      }
+    } else {
+      ud.patrolTimer -= dt;
+      if (ud.patrolTimer <= 0) {
+        ud.patrolTimer = 1.6 + Math.random() * 2.4;
+        const ang = Math.random() * Math.PI * 2;
+        ud.patrolDir.set(Math.cos(ang), 0, Math.sin(ang));
+      }
+      const lookTarget = enemy.position.clone().add(ud.patrolDir);
+      enemy.lookAt(lookTarget.x, 0, lookTarget.z);
+      const oldX = enemy.position.x, oldZ = enemy.position.z;
+      resolveMovement(enemy.position, ud.patrolDir.x * ud.patrolSpeed * dt, ud.patrolDir.z * ud.patrolSpeed * dt, eRadius);
+      if (Math.hypot(enemy.position.x - oldX, enemy.position.z - oldZ) < ud.patrolSpeed * dt * 0.25) {
+        const turnAng = Math.random() * Math.PI * 2;
+        ud.patrolDir.set(Math.cos(turnAng), 0, Math.sin(turnAng));
+        ud.patrolTimer = 1.2;
+      }
+      ud.walkPhase += dt * ud.patrolSpeed * 2.8;
+      ud.legL.rotation.x = Math.sin(ud.walkPhase) * 0.42;
+      ud.legR.rotation.x = -Math.sin(ud.walkPhase) * 0.42;
     }
 
     if (ud.flash > 0) {
       ud.flash -= dt * 5;
-      ud.bodyMat.emissiveIntensity = 0.32 + Math.max(0, ud.flash) * 0.8;
+      ud.bodyMat.emissiveIntensity = 0.22 + Math.max(0, ud.flash) * 0.65;
     }
 
     ud.cooldown -= dt;
-    if (dist < 2.1 && ud.cooldown <= 0) {
-      ud.cooldown = 1.0;
-      hurtPlayer(ud.type === 1 ? 22 : 14);
-    }
-
-    if (ud.type !== 0) {
-      ud.shootCd -= dt;
-      if (ud.shootCd <= 0 && dist < 36) {
-        ud.shootCd = ud.type === 1 ? 1.5 : 2.1;
-        const from = enemy.position.clone().setY(1.45);
-        const dir = new THREE.Vector3().subVectors(player.pos, from).normalize();
-        const b = new THREE.Mesh(bulletGeo, bulletMat);
-        b.position.copy(from);
-        b.userData = { vel: dir.multiplyScalar(ud.type === 2 ? 17 : 13), dmg: ud.type === 1 ? 18 : 13, life: 3.5 };
-        scene.add(b);
-        enemyBullets.push(b);
-      }
+    if (!state.gameOver && dist < 2.1 && ud.cooldown <= 0) {
+      ud.cooldown = 0.9;
+      hurtPlayer(ud.meleeDmg);
     }
   }
 }
@@ -2338,7 +3135,11 @@ function loop() {
     if (mouseDown) shoot();
   }
 
+  updateHighwayCars(worldDt);
+  updateSkyDogfight(worldDt);
   updateParticles(worldDt);
+  mothership.rotation.y += worldDt * 0.08;
+  mothership.position.y = 76 + Math.sin(performance.now() * 0.0012) * 1.4;
 
   state.hurtFlash = Math.max(0, state.hurtFlash - rawDt * 2.2);
   state.shieldFlash = Math.max(0, state.shieldFlash - rawDt * 2.8);
