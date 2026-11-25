@@ -182,6 +182,13 @@
   #reload-hint { font-size: 12px; letter-spacing: 2px; color: #ffd166; margin-top: 4px; opacity: 0; font-weight: 700; }
 
   #kill-feed { position: absolute; right: 28px; top: 24px; text-align: right; display: flex; flex-direction: column; gap: 5px; }
+  #bgm-badge {
+    align-self: flex-end;
+    font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 2px;
+    color: #7df9ff; background: rgba(8, 14, 28, 0.72);
+    border: 1px solid rgba(0, 229, 255, 0.35); padding: 3px 9px; margin-bottom: 4px;
+  }
+  #bgm-badge.muted { color: #8ba8c7; border-color: rgba(139, 168, 199, 0.25); opacity: 0.7; }
   .kill-item {
     background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.18));
     border-right: 2px solid #00e5ff; padding: 3px 10px;
@@ -313,7 +320,9 @@
     <div id="reload-hint">[ R ] 正在更换战术弹匣...</div>
   </div>
 
-  <div id="kill-feed"></div>
+  <div id="kill-feed">
+    <div id="bgm-badge">SYNTH BGM // ON [M]</div>
+  </div>
   <div id="damage-vignette"></div>
   <div id="shield-vignette"></div>
   <div id="wave-banner">
@@ -335,10 +344,10 @@
     <div class="ctrl-row"><span class="key-cap">SHIFT</span><span>冲刺 / 滑铲 (Ctrl/C)</span></div>
     <div class="ctrl-row"><span class="key-cap">1 / 2 / 3</span><span>切换三系重火力武器</span></div>
     <div class="ctrl-row"><span class="key-cap">R</span><span>战术换弹</span></div>
-    <div class="ctrl-row"><span class="key-cap">Q</span><span>子弹时间 (战术超频)</span></div>
+    <div class="ctrl-row"><span class="key-cap">Q / M</span><span>子弹时间 / 切换纯音乐</span></div>
   </div>
   <button class="btn" id="start-btn">部署至战区</button>
-  <div class="hint">右键开镜可清晰锁定远距离目标 · 每一关出现不同建模敌军</div>
+  <div class="hint">右键开镜可清晰锁定远距离目标 · 内置纯音乐合成器 (按 M 静音/开启)</div>
 </div>
 
 <!-- 结束菜单 -->
@@ -412,7 +421,8 @@ const state = {
   recoilPitch: 0, recoilYaw: 0, gunKick: 0, boltKick: 0,
   shake: 0,
   hurtFlash: 0, shieldFlash: 0,
-  bobTime: 0
+  bobTime: 0,
+  bgmMuted: false
 };
 
 const player = {
@@ -632,14 +642,13 @@ const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x55d6f
 scene.add(dust);
 
 /* ============================================================
-   4. 程序化皮肤贴图与三系枪械建模（步枪赛博荧光+枪机+换弹夹大改）
+   4. 程序化皮肤贴图与三系枪械建模
 ============================================================ */
 function createCyberBullpupSkinTexture() {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 512;
   const ctx = c.getContext('2d');
 
-  // 深空碳纤暗蓝底色，贴近写实武器金属与战损层次
   const bg = ctx.createLinearGradient(0, 0, 512, 512);
   bg.addColorStop(0, '#141c33');
   bg.addColorStop(0.55, '#1d2b4d');
@@ -647,7 +656,6 @@ function createCyberBullpupSkinTexture() {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, 512, 512);
 
-  // 细微金属拉丝与碳纤维网格
   ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
   ctx.lineWidth = 1;
   for (let i = 0; i < 512; i += 8) {
@@ -655,7 +663,6 @@ function createCyberBullpupSkinTexture() {
     ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
   }
 
-  // 写实磨损刮痕与爪痕感高光
   ctx.strokeStyle = 'rgba(226, 232, 240, 0.34)';
   ctx.lineWidth = 2.5;
   for (let s = 0; s < 36; s++) {
@@ -667,7 +674,6 @@ function createCyberBullpupSkinTexture() {
     ctx.stroke();
   }
 
-  // 赛博荧光青蓝/品红斜切能量条纹
   const neonGrad = ctx.createLinearGradient(0, 120, 512, 380);
   neonGrad.addColorStop(0, '#00f5ff');
   neonGrad.addColorStop(0.5, '#38bdf8');
@@ -690,7 +696,6 @@ function createCyberBullpupSkinTexture() {
   ctx.closePath();
   ctx.fill();
 
-  // 顶部荧光刻度槽
   ctx.fillStyle = '#00f5ff';
   for (let x = 40; x < 470; x += 28) {
     ctx.fillRect(x, 48, 12, 5);
@@ -772,7 +777,6 @@ const rifleChromeMat = new THREE.MeshStandardMaterial({
 });
 const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
 const neonPinkMat = new THREE.MeshBasicMaterial({ color: 0xff2d8f });
-const neonLimeMat = new THREE.MeshBasicMaterial({ color: 0x9eff00 });
 
 const shotgunSkinMat = new THREE.MeshStandardMaterial({
   map: shotgunSkinTex, roughness: 0.3, metalness: 0.68,
@@ -787,12 +791,9 @@ receiver.position.set(0, 0.01, -0.04);
 const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.02, 0.48), gunAlloy);
 topRail.position.set(0, 0.076, -0.1);
 
-// ------------------------------------------------------------
-// A. [1] 无托赛博荧光脉冲步枪（枪机往复运动 + 换弹夹动画 + 丰富荧光）
-// ------------------------------------------------------------
+// A. [1] 无托赛博荧光脉冲步枪
 const rifleModelGroup = new THREE.Group();
 
-// 1. 顶部高架提把/导轨桥架（贴近无托突击步枪经典轮廓）
 const carryBridgeTop = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.022, 0.44), gunAlloy);
 carryBridgeTop.position.set(0, 0.118, -0.16);
 
@@ -802,11 +803,9 @@ carryPostFront.position.set(0, 0.092, -0.34);
 const carryPostRear = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.045, 0.045), rifleBodyMat);
 carryPostRear.position.set(0, 0.092, 0.02);
 
-// 提把顶部荧光导引灯条
 const carryNeonStrip = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.008, 0.38), neonCyanMat);
 carryNeonStrip.position.set(0, 0.131, -0.16);
 
-// 全息准星框（精简不挡视野）
 const holoHoodL = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.028, 0.055), gunAlloy);
 holoHoodL.position.set(-0.026, 0.142, -0.18);
 const holoHoodR = holoHoodL.clone();
@@ -814,7 +813,6 @@ holoHoodR.position.x = 0.026;
 const holoReticleDot = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.006), neonPinkMat);
 holoReticleDot.position.set(0, 0.142, -0.18);
 
-// 2. 前段细枪管 + 荧光导能管 + 消焰器
 const rifleBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.019, 0.34, 14), rifleChromeMat);
 rifleBarrel.rotation.x = Math.PI / 2;
 rifleBarrel.position.set(0, 0.036, -0.53);
@@ -827,11 +825,9 @@ const rifleMuzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.02, 0.075
 rifleMuzzle.rotation.x = Math.PI / 2;
 rifleMuzzle.position.set(0, 0.036, -0.72);
 
-// 3. 主机匣、侧边护框与荧光灯带
 const rifleChassis = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.125, 0.56), rifleBodyMat);
 rifleChassis.position.set(0, 0.015, -0.06);
 
-// 下方护手框体（无托前握区）
 const lowerForeFrame = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.024, 0.24), gunAlloy);
 lowerForeFrame.position.set(0, -0.062, -0.26);
 
@@ -839,7 +835,6 @@ const foreGuardAngled = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.024, 0.12)
 foreGuardAngled.position.set(0, -0.038, -0.14);
 foreGuardAngled.rotation.x = -0.38;
 
-// 机匣两侧荧光灯带（赛博感核心）
 const sideNeonLeftTop = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.012, 0.44), neonCyanMat);
 sideNeonLeftTop.position.set(-0.051, 0.055, -0.08);
 
@@ -852,7 +847,6 @@ sideNeonRightTop.position.x = 0.051;
 const sideNeonRightBot = sideNeonLeftBot.clone();
 sideNeonRightBot.position.x = 0.051;
 
-// 4. 射击时来回移动的“枪机组件”（Bolt Carrier + 枪机拉柄 + 荧光导块）
 const boltAssembly = new THREE.Group();
 const boltCarrier = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.034, 0.13), rifleChromeMat);
 boltCarrier.position.set(-0.048, 0.026, -0.14);
@@ -865,7 +859,6 @@ boltGlowStrip.position.set(-0.064, 0.026, -0.14);
 
 boltAssembly.add(boltCarrier, boltChargingHandle, boltGlowStrip);
 
-// 5. 独立可动“战术弹匣”（支持完整换弹夹抽出、掉落与重新插入动画）
 const rifleMagGroup = new THREE.Group();
 rifleMagGroup.position.set(0, -0.05, 0.06);
 
@@ -883,7 +876,6 @@ rifleMagBasePlate.rotation.x = -0.22;
 
 rifleMagGroup.add(rifleMagBody, rifleMagNeonEdge, rifleMagBasePlate);
 
-// 6. 握把与后部托腮块
 const rifleGrip = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.125, 0.072), gunAlloy);
 rifleGrip.position.set(0, -0.095, -0.11);
 rifleGrip.rotation.x = 0.24;
@@ -903,9 +895,7 @@ rifleModelGroup.add(
   boltAssembly, rifleMagGroup, rifleGrip, rifleButtPad, rifleButtNeon
 );
 
-// ------------------------------------------------------------
-// B. [2] 等离霰弹枪专属建模（荧光酸橙+深靛蓝迷彩、滑动护木、截短托）
-// ------------------------------------------------------------
+// B. [2] 等离霰弹枪专属建模
 const shotgunModelGroup = new THREE.Group();
 
 const sgBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.023, 0.46, 14), shotgunSkinMat);
@@ -949,9 +939,7 @@ shotgunModelGroup.add(
   sgReceiver, sgTopLimeBar, sgStockBody, sgStockPad, sgStockLimeTrim
 );
 
-// ------------------------------------------------------------
-// C. [3] 电磁狙击步枪专属建模（霓虹蓝电路全息镜 + 骨架狙击托）
-// ------------------------------------------------------------
+// C. [3] 电磁狙击步枪专属建模
 const sniperModelGroup = new THREE.Group();
 
 const barrelGroup = new THREE.Group();
@@ -1128,11 +1116,210 @@ camera.add(weaponPivot);
 scene.add(camera);
 
 /* ============================================================
-   5. 音效引擎 (WebAudio)
+   5. 音效引擎 + 纯音乐赛博合成器（WebAudio Synth BGM）
 ============================================================ */
 const audio = {
   ctx: null,
-  init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  bgmMaster: null,
+  bgmFilter: null,
+  bgmTimer: null,
+  step: 0,
+  // 暗黑赛博音阶 (D Minor / Dorian 动感纯音乐序列)
+  bassNotes: [73.42, 73.42, 73.42, 73.42, 87.31, 87.31, 65.41, 65.41],
+  arpNotes: [293.66, 349.23, 440.00, 523.25, 587.33, 523.25, 440.00, 349.23,
+             329.63, 392.00, 493.88, 587.33, 659.25, 587.33, 493.88, 392.00],
+  padChords: [
+    [146.83, 220.00, 261.63], // Dm7
+    [174.61, 220.00, 261.63], // Fmaj7
+    [130.81, 196.00, 261.63], // C
+    [164.81, 246.94, 293.66]  // Em7b5
+  ],
+
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.setupBGMGraph();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+    this.startBGM();
+  },
+
+  setupBGMGraph() {
+    this.bgmFilter = this.ctx.createBiquadFilter();
+    this.bgmFilter.type = 'lowpass';
+    this.bgmFilter.frequency.value = 1600;
+    this.bgmFilter.Q.value = 2.4;
+
+    const delay = this.ctx.createDelay(0.6);
+    delay.delayTime.value = 0.24;
+    const feedback = this.ctx.createGain();
+    feedback.gain.value = 0.28;
+    const delayWet = this.ctx.createGain();
+    delayWet.gain.value = 0.22;
+
+    this.bgmFilter.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(delayWet);
+
+    this.bgmMaster = this.ctx.createGain();
+    this.bgmMaster.gain.value = state.bgmMuted ? 0 : 0.16;
+
+    this.bgmFilter.connect(this.bgmMaster);
+    delayWet.connect(this.bgmMaster);
+    this.bgmMaster.connect(this.ctx.destination);
+  },
+
+  setMuted(muted) {
+    state.bgmMuted = muted;
+    if (this.bgmMaster && this.ctx) {
+      this.bgmMaster.gain.setTargetAtTime(muted ? 0 : 0.16, this.ctx.currentTime, 0.05);
+    }
+    const badge = document.getElementById('bgm-badge');
+    if (badge) {
+      badge.textContent = muted ? 'SYNTH BGM // MUTED [M]' : 'SYNTH BGM // ON [M]';
+      badge.classList.toggle('muted', muted);
+    }
+  },
+
+  toggleMute() {
+    this.setMuted(!state.bgmMuted);
+  },
+
+  playKick(t) {
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(135, t);
+    o.frequency.exponentialRampToValueAtTime(34, t + 0.14);
+    g.gain.setValueAtTime(0.45, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    o.connect(g); g.connect(this.bgmFilter);
+    o.start(t); o.stop(t + 0.17);
+  },
+
+  playHat(t, accent = false) {
+    const dur = accent ? 0.065 : 0.035;
+    const len = Math.floor(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 6200;
+    const g = this.ctx.createGain();
+    g.gain.value = accent ? 0.11 : 0.05;
+    src.connect(hp); hp.connect(g); g.connect(this.bgmFilter);
+    src.start(t);
+  },
+
+  playSnare(t) {
+    const len = Math.floor(this.ctx.sampleRate * 0.12);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.8);
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1550;
+    const g = this.ctx.createGain();
+    g.gain.value = 0.14;
+    src.connect(bp); bp.connect(g); g.connect(this.bgmFilter);
+    src.start(t);
+  },
+
+  playBass(t, freq, stepLen) {
+    const o = this.ctx.createOscillator();
+    const f = this.ctx.createBiquadFilter();
+    const g = this.ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(freq, t);
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(520, t);
+    f.frequency.exponentialRampToValueAtTime(140, t + stepLen * 0.9);
+    g.gain.setValueAtTime(0.24, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + stepLen * 0.92);
+    o.connect(f); f.connect(g); g.connect(this.bgmFilter);
+    o.start(t); o.stop(t + stepLen);
+  },
+
+  playArp(t, freq, stepLen) {
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.085, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + stepLen * 0.85);
+    o.connect(g); g.connect(this.bgmFilter);
+    o.start(t); o.stop(t + stepLen * 0.9);
+  },
+
+  playPadChord(t, chord, dur) {
+    chord.forEach(freq => {
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.linearRampToValueAtTime(0.045, t + dur * 0.25);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.98);
+      o.connect(g); g.connect(this.bgmFilter);
+      o.start(t); o.stop(t + dur);
+    });
+  },
+
+  startBGM() {
+    if (!this.ctx || this.bgmTimer) return;
+    const scheduleTick = () => {
+      this.bgmTimer = setTimeout(scheduleTick, 125);
+      if (!this.ctx || state.bgmMuted) return;
+
+      const activeCombat = state.started && !state.gameOver && !state.paused;
+      const slowFactor = state.bulletTime ? 1.65 : 1.0;
+      const t = this.ctx.currentTime + 0.02;
+
+      const targetCutoff = !activeCombat ? 550 : (state.bulletTime ? 750 : 1850);
+      this.bgmFilter.frequency.setTargetAtTime(targetCutoff, t, 0.08);
+
+      const targetVol = state.gameOver ? 0.03 : (!activeCombat ? 0.08 : 0.16);
+      this.bgmMaster.gain.setTargetAtTime(targetVol, t, 0.1);
+
+      const s = this.step;
+      const stepDur = 0.125 * slowFactor;
+
+      if (s % 16 === 0) {
+        const chordIdx = Math.floor(s / 16) % this.padChords.length;
+        this.playPadChord(t, this.padChords[chordIdx], stepDur * 16);
+      }
+
+      if (activeCombat) {
+        if (s % 4 === 0) this.playKick(t);
+        if (s % 8 === 4) this.playSnare(t);
+        if (s % 2 === 1) this.playHat(t, s % 4 === 3);
+
+        const bFreq = this.bassNotes[s % this.bassNotes.length];
+        this.playBass(t, bFreq, stepDur);
+
+        if (s % 2 === 0 || state.wave >= 2) {
+          const aFreq = this.arpNotes[s % this.arpNotes.length];
+          this.playArp(t, aFreq, stepDur);
+        }
+      } else {
+        if (s % 4 === 0) {
+          this.playBass(t, this.bassNotes[s % this.bassNotes.length] * 0.5, stepDur * 3);
+        }
+      }
+
+      this.step = (this.step + 1) % 64;
+    };
+    scheduleTick();
+  },
+
   shoot(wIdx) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
@@ -1690,6 +1877,10 @@ function updateWave(dt) {
 ============================================================ */
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
+  if (e.code === 'KeyM') {
+    if (!audio.ctx) audio.init();
+    audio.toggleMute();
+  }
   if (e.code === 'KeyR') startReload();
   if (e.code === 'Digit1') switchWeapon(0);
   if (e.code === 'Digit2') switchWeapon(1);
@@ -1949,12 +2140,10 @@ function updatePlayer(rawDt) {
 
   document.getElementById('crosshair').classList.toggle('ads', state.adsLerp > 0.5);
 
-  // 步枪枪机往复移动（射击时向后抽动并快速复位）
   const boltTravel = Math.sin(state.boltKick * Math.PI) * 0.085;
   boltAssembly.position.z = boltTravel;
   boltGlowStrip.material.color.setHex(state.boltKick > 0.25 ? 0xff2d8f : 0x00f5ff);
 
-  // 脉冲步枪换弹夹动画（抽出 -> 倾斜掉落 -> 新弹匣插入复位）
   if (state.weaponIdx === 0 && state.reloading) {
     const progress = 1 - Math.max(0, state.reloadTimer / Math.max(0.01, state.reloadDuration));
     if (progress < 0.42) {
@@ -1975,7 +2164,6 @@ function updatePlayer(rawDt) {
     rifleMagGroup.rotation.set(0, 0, 0);
   }
 
-  // 霰弹枪换弹时推拉前护木动效
   if (state.weaponIdx === 1 && state.reloading) {
     sgPumpForend.position.z = -0.34 + Math.sin(state.reloadTimer * 18) * 0.06;
     sgPumpLimeStripe.position.z = sgPumpForend.position.z;
