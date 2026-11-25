@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEON STRIKE // PROTOCOL OMEGA v3.6</title>
+<title>NEON STRIKE // PROTOCOL OMEGA v3.7</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
 
@@ -134,6 +134,17 @@
   #combo-box.active { opacity: 1; }
   #combo-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: #ffd166; text-shadow: 0 0 10px #ff9f1c; letter-spacing: 2px; }
 
+  #gear-bar {
+    position: absolute; top: 112px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 680px;
+  }
+  .gear-chip {
+    font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1.5px;
+    color: #fde68a; background: rgba(24, 18, 8, 0.82);
+    border: 1px solid rgba(251, 191, 36, 0.55); padding: 3px 10px;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+  }
+
   #radar-wrap {
     position: absolute; top: 24px; left: 28px; width: 144px; height: 144px;
     border-radius: 50%; border: 2px solid rgba(0, 229, 255, 0.45);
@@ -191,9 +202,10 @@
     background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.18));
     border-right: 2px solid #00e5ff; padding: 3px 10px;
     color: #e0f7fa; font-size: 13px; letter-spacing: 1px;
-    animation: fadeSlide 2.4s forwards;
+    animation: fadeSlide 2.6s forwards;
   }
   .kill-item.headshot { border-right-color: #ff2d55; background: linear-gradient(90deg, transparent, rgba(255, 45, 85, 0.25)); color: #ff8a9e; }
+  .kill-item.boss { border-right-color: #fbbf24; background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.28)); color: #fde68a; font-weight: 700; }
   @keyframes fadeSlide {
     0% { opacity: 0; transform: translateX(20px); }
     10% { opacity: 1; transform: translateX(0); }
@@ -258,14 +270,14 @@
   <div id="holo-optic">
     <div class="holo-ring"></div>
     <div class="holo-dot"></div>
-    <div class="holo-tag">HOLO-SIGHT // 1.5X</div>
+    <div class="holo-tag" id="holo-tag-txt">HOLO-SIGHT // 1.5X</div>
   </div>
   <div id="sniper-optic">
     <div class="scope-ring"></div>
     <div class="axis-h"></div>
     <div class="axis-v"></div>
     <div class="center-chev"></div>
-    <div class="zoom-readout">RAIL-OPTIC // 4.0X ZOOM</div>
+    <div class="zoom-readout" id="sniper-zoom-txt">RAIL-OPTIC // 4.0X ZOOM</div>
   </div>
 </div>
 
@@ -283,6 +295,7 @@
     <div class="stat"><div class="label">KILLS</div><div class="value" id="kills-value">0</div></div>
   </div>
   <div id="combo-box"><div id="combo-val">2X MULTI-KILL</div></div>
+  <div id="gear-bar"></div>
 
   <div id="crosshair-wrap">
     <div id="crosshair">
@@ -331,13 +344,13 @@
 
 <!-- 开始菜单 -->
 <div class="overlay" id="menu">
-  <div class="badge">BUILD 2026.11 // HIGHWAY & STREETS v3.6</div>
+  <div class="badge">BUILD 2026.11 // HIGHWAY & STREETS v3.7</div>
   <div class="title">NEON STRIKE</div>
   <div class="subtitle">霓 虹 突 袭 · 街 道 公 路 战 区</div>
   <div class="controls-grid">
     <div class="ctrl-row"><span class="key-cap">W A S D</span><span>街道公路游击移动</span></div>
     <div class="ctrl-row"><span class="key-cap">SPACE</span><span>跳跃 / 喷气推进</span></div>
-    <div class="ctrl-row"><span class="key-cap">LMB</span><span>主武器开火</span></div>
+    <div class="ctrl-row"><span class="key-cap">LMB</span><span>主武器开火（枪声吸引敌军）</span></div>
     <div class="ctrl-row"><span class="key-cap">RMB</span><span>战术瞄准镜 (全息 / 狙击镜)</span></div>
     <div class="ctrl-row"><span class="key-cap">SHIFT</span><span>冲刺 / 滑铲 (Ctrl/C)</span></div>
     <div class="ctrl-row"><span class="key-cap">1 / 2 / 3</span><span>切换三系重火力武器</span></div>
@@ -345,7 +358,7 @@
     <div class="ctrl-row"><span class="key-cap">Q / M</span><span>子弹时间 / 切换纯音乐</span></div>
   </div>
   <button class="btn" id="start-btn">部署至街区公路</button>
-  <div class="hint">严密实体防穿模 · 红绿灯车流控速 · 场内无坠落残骸 · 外星人手持激光枪等速射击</div>
+  <div class="hint">每波刷新大BOSS掉落跨局装备 · 街区路灯与街道补建 · 车辆出界消失 · 重开清空装备</div>
 </div>
 
 <!-- 结束菜单 -->
@@ -374,7 +387,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ============================================================
-   1. 战区配置与三系重火力武器库
+   1. 战区配置、三系重火力武器库与跨局装备状态
 ============================================================ */
 const ARENA = 76;
 const PLAYER_BULLET_SPEED = 48.0;
@@ -403,6 +416,37 @@ const WEAPONS = [
   }
 ];
 
+// 装备仅在当前游玩生涯中有效，重开（restart / location.reload）后全部清零，可跨波次使用
+const gear = {
+  extMagLevel: 0,      // 扩容弹夹层数
+  upgradeLevel: 0,     // 武器升级层数（提升伤害与射速）
+  silencer: false,     // 消音器（大幅降低枪声吸引半径）
+  scopeLevel: 0        // 倍镜层数（进一步缩小 ADS 视角 FOV）
+};
+
+function getEffectiveMagSize(wIdx) {
+  const base = WEAPONS[wIdx].magSize;
+  if (gear.extMagLevel <= 0) return base;
+  return Math.round(base * (1 + gear.extMagLevel * 0.35));
+}
+
+function getEffectiveDamage(wIdx) {
+  const base = WEAPONS[wIdx].damage;
+  return Math.round(base * (1 + gear.upgradeLevel * 0.22));
+}
+
+function getEffectiveFireRate(wIdx) {
+  const base = WEAPONS[wIdx].fireRate;
+  return base / (1 + gear.upgradeLevel * 0.12);
+}
+
+function getEffectiveFov(wIdx) {
+  const base = WEAPONS[wIdx].fov;
+  if (gear.scopeLevel <= 0) return base;
+  const factor = Math.pow(0.76, gear.scopeLevel);
+  return Math.max(9, Math.round(base * factor));
+}
+
 const state = {
   started: false, gameOver: false, locked: false, paused: false,
   health: 100, maxHealth: 100,
@@ -412,7 +456,8 @@ const state = {
   ammo: [32, 8, 5],
   score: 0, wave: 0, kills: 0, headshots: 0,
   combo: 0, comboTimer: 0,
-  enemiesToSpawn: 0, spawnTimer: 0, waveBreak: 2.0,
+  enemiesToSpawn: 0, bossToSpawn: false,
+  spawnTimer: 0, waveBreak: 2.0,
   reloading: false, reloadTimer: 0, reloadDuration: 1.25,
   lastShot: 0,
   ads: false, adsLerp: 0,
@@ -491,7 +536,7 @@ lightPositions.forEach(([x, y, z, col]) => {
 });
 
 /* ============================================================
-   3. 条状街道与城市公路、红绿灯控制、每路约3辆车、精致车辆建模与防穿模系统
+   3. 条状街道、路灯、街区建筑增补、车辆出界消失与防穿模系统
 ============================================================ */
 function createCyberStreetTexture() {
   const c = document.createElement('canvas');
@@ -618,7 +663,7 @@ function createBillboardTexture(titleText, subText, bgHex, borderHex, textHex) {
 }
 
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(ARENA * 2 + 220, ARENA * 2 + 220),
+  new THREE.PlaneGeometry(ARENA * 2 + 240, ARENA * 2 + 240),
   new THREE.MeshStandardMaterial({ map: createCyberStreetTexture(), roughness: 0.56, metalness: 0.48 })
 );
 ground.rotation.x = -Math.PI / 2;
@@ -803,13 +848,37 @@ function addCityLandmarkBuilding(x, z, style, matIdx, accentIdx) {
   scene.add(g);
 }
 
+// 道路两侧路灯摆布（2. 要求）
+function addStreetLamp(x, z, armDirX = 0, armDirZ = 0, accentIdx = 0) {
+  const lg = new THREE.Group();
+  const trim = trimMats[accentIdx % trimMats.length];
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.13, 6.2, 10), pillarMat);
+  pole.position.set(0, 3.1, 0);
+  pole.castShadow = true;
+
+  const armLen = 1.6;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(armDirX !== 0 ? armLen : 0.1, 0.1, armDirZ !== 0 ? armLen : 0.1), pillarMat);
+  arm.position.set(armDirX * armLen * 0.45, 6.1, armDirZ * armLen * 0.45);
+
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 0.28), coverMat);
+  head.position.set(armDirX * armLen * 0.85, 6.02, armDirZ * armLen * 0.85);
+
+  const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.06, 0.2), trim);
+  bulb.position.set(armDirX * armLen * 0.85, 5.94, armDirZ * armLen * 0.85);
+
+  lg.add(pole, arm, head, bulb);
+  lg.position.set(x, 0, z);
+  scene.add(lg);
+  registerSolidBox(x, z, 0.42, 6.2, 0.42, pole);
+}
+
 const highwayMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.45, metalness: 0.55 });
 const highwayLineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
 const highwayWhiteMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0 });
 
 function addHighwayCorridor(axis, offset) {
   const isX = axis === 'x';
-  const roadLen = ARENA * 2 + 20;
+  const roadLen = ARENA * 2 + 40;
   const roadWidth = 9.2;
   const road = new THREE.Mesh(
     new THREE.BoxGeometry(isX ? roadLen : roadWidth, 0.06, isX ? roadWidth : roadLen),
@@ -842,6 +911,22 @@ addHighwayCorridor('x', 24);
 addHighwayCorridor('z', -24);
 addHighwayCorridor('z', 24);
 
+// 沿四条主干道两侧摆放路灯
+[-56, -38, -10, 10, 38, 56].forEach((pos, idx) => {
+  // 道路 X = -24 两侧（避开路口 ±24 中心）
+  addStreetLamp(-29.2, pos, 1, 0, idx);
+  addStreetLamp(-18.8, pos, -1, 0, idx + 1);
+  // 道路 X = +24 两侧
+  addStreetLamp(18.8, pos, 1, 0, idx + 2);
+  addStreetLamp(29.2, pos, -1, 0, idx + 3);
+  // 道路 Z = -24 两侧
+  addStreetLamp(pos, -29.2, 0, 1, idx + 1);
+  addStreetLamp(pos, -18.8, 0, -1, idx + 2);
+  // 道路 Z = +24 两侧
+  addStreetLamp(pos, 18.8, 0, 1, idx + 3);
+  addStreetLamp(pos, 29.2, 0, -1, idx + 4);
+});
+
 const trafficLights = [];
 function addTrafficLight(x, z, rotY = 0, groupId = 0) {
   const tg = new THREE.Group();
@@ -870,7 +955,6 @@ function addTrafficLight(x, z, rotY = 0, groupId = 0) {
 }
 
 function getSignalForAxis(axis, timeSec) {
-  // 0..10s: X轴绿灯 / Z轴红灯；10..12s: X轴黄灯；12..22s: Z轴绿灯 / X轴红灯；22..24s: Z轴黄灯
   const t = timeSec % 24;
   if (axis === 'x') {
     if (t < 10) return 'green';
@@ -1107,7 +1191,7 @@ const boundaryWireMat = new THREE.LineBasicMaterial({
   scene.add(topLine);
 });
 
-// 2. 条状街区与公路沿线建筑群
+// 2. 条状街区与公路沿线建筑群 + 空旷区街道排布建筑（1. 要求）
 addCoverBox(0, 0, 4.4, 2.8, 4.4, 1, facadeMats[1], true, false);
 
 addSteppedTower(-10.5, -10.5, 5.2, 5.2, 9, 7, 4, 0, 0);
@@ -1137,6 +1221,17 @@ addCityLandmarkBuilding(34, 34, 'spire', 1, 1);
   addSteppedTower(pos, 33, 6.2, 5.6, 15 + ((i + 1) % 4) * 3, 10, 5, (i + 1) % 6, (i + 2) % 6);
   addPrismBuilding(-33, pos, 3.3, 17 + (i % 3) * 3, 8, (i + 2) % 6, (i + 3) % 6);
   addPrismBuilding(33, pos, 3.3, 18 + ((i + 2) % 3) * 3, 6, (i + 3) % 6, (i + 4) % 6);
+});
+
+// 额外在四角与外围空旷地带按街道排布建筑物
+[-52, -40, 40, 52].forEach((bx, ix) => {
+  [-52, -40, 40, 52].forEach((bz, iz) => {
+    if ((ix + iz) % 2 === 0) {
+      addSteppedTower(bx, bz, 6.0, 6.0, 15 + ((ix * 3 + iz * 2) % 4) * 3, 9, 4, (ix + iz) % 6, ix % 6);
+    } else {
+      addPrismBuilding(bx, bz, 3.2, 14 + ((ix + iz) % 3) * 3, 6, (ix + 2) % 6, iz % 6);
+    }
+  });
 });
 
 addSteppedTower(-64, -14, 7.6, 7.2, 22, 14, 7, 2, 0);
@@ -1778,7 +1873,7 @@ camera.add(weaponPivot);
 scene.add(camera);
 
 /* ============================================================
-   5. 音效引擎 + 纯音乐赛博合成器（WebAudio Synth BGM）
+   5. 音效引擎 + 纯音乐赛博合成器（含武器切换音效）
 ============================================================ */
 const audio = {
   ctx: null,
@@ -1981,9 +2076,34 @@ const audio = {
     scheduleTick();
   },
 
+  switchWeaponSound() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o1 = this.ctx.createOscillator();
+    o1.type = 'triangle';
+    o1.frequency.setValueAtTime(340, t);
+    o1.frequency.exponentialRampToValueAtTime(760, t + 0.075);
+    const g1 = this.ctx.createGain();
+    g1.gain.setValueAtTime(0.14, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.085);
+    o1.connect(g1); g1.connect(this.ctx.destination);
+    o1.start(t); o1.stop(t + 0.09);
+
+    const o2 = this.ctx.createOscillator();
+    o2.type = 'square';
+    o2.frequency.setValueAtTime(620, t + 0.045);
+    o2.frequency.exponentialRampToValueAtTime(980, t + 0.11);
+    const g2 = this.ctx.createGain();
+    g2.gain.setValueAtTime(0.06, t + 0.045);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.115);
+    o2.connect(g2); g2.connect(this.ctx.destination);
+    o2.start(t + 0.045); o2.stop(t + 0.12);
+  },
+
   shoot(wIdx) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
+    const volScale = gear.silencer ? 0.32 : 1.0;
     const dur = wIdx === 1 ? 0.22 : (wIdx === 2 ? 0.32 : 0.11);
     const len = Math.floor(this.ctx.sampleRate * dur);
     const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -1992,10 +2112,10 @@ const audio = {
 
     const src = this.ctx.createBufferSource(); src.buffer = buf;
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = wIdx === 1 ? 650 : (wIdx === 2 ? 1100 : 1800);
+    filter.type = gear.silencer ? 'lowpass' : 'bandpass';
+    filter.frequency.value = gear.silencer ? 900 : (wIdx === 1 ? 650 : (wIdx === 2 ? 1100 : 1800));
     const gain = this.ctx.createGain();
-    gain.gain.value = wIdx === 0 ? 0.22 : 0.35;
+    gain.gain.value = (wIdx === 0 ? 0.22 : 0.35) * volScale;
     src.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
     src.start(t);
 
@@ -2004,7 +2124,7 @@ const audio = {
     osc.frequency.setValueAtTime(wIdx === 2 ? 320 : 170, t);
     osc.frequency.exponentialRampToValueAtTime(38, t + dur * 0.8);
     const og = this.ctx.createGain();
-    og.gain.setValueAtTime(0.25, t);
+    og.gain.setValueAtTime(0.25 * volScale, t);
     og.gain.exponentialRampToValueAtTime(0.001, t + dur);
     osc.connect(og); og.connect(this.ctx.destination);
     osc.start(t); osc.stop(t + dur);
@@ -2042,6 +2162,20 @@ const audio = {
     const g = this.ctx.createGain(); g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
     o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.15);
   },
+  bossGear() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    [587.33, 783.99, 1046.5].forEach((freq, idx) => {
+      const o = this.ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(freq, t + idx * 0.07);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.16, t + idx * 0.07);
+      g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.07 + 0.18);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(t + idx * 0.07); o.stop(t + idx * 0.07 + 0.19);
+    });
+  },
   hurt() {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
@@ -2061,7 +2195,7 @@ const audio = {
 };
 
 /* ============================================================
-   6. 外星人手持激光枪建模（无胸口炮）与等速激光弹道
+   6. 外星人建模（含每波大 BOSS）、视力、枪声搜寻与波次移速
 ============================================================ */
 const enemies = [];
 const enemyBullets = [];
@@ -2074,7 +2208,7 @@ laserBoltGeo.rotateX(Math.PI / 2);
 const laserBoltMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
 const particleGeo = new THREE.BoxGeometry(0.07, 0.07, 0.07);
 
-function buildEnemyModel(waveNum, type) {
+function buildEnemyModel(waveNum, type, isBoss = false) {
   const g = new THREE.Group();
   const stage = ((waveNum - 1) % 3);
 
@@ -2083,7 +2217,12 @@ function buildEnemyModel(waveNum, type) {
   let visorColor = 0x22d3ee;
   let baseScale = 1.0;
 
-  if (stage === 0) {
+  if (isBoss) {
+    armorColor = 0x581c87;
+    emissiveColor = 0xfbbf24;
+    visorColor = 0xff2d55;
+    baseScale = 2.05;
+  } else if (stage === 0) {
     armorColor = type === 1 ? 0x5c3a1e : (type === 2 ? 0x2e2559 : 0x4d1828);
     emissiveColor = type === 1 ? 0xf59e0b : (type === 2 ? 0x8b5cf6 : 0xe11d48);
     visorColor = 0x22d3ee;
@@ -2103,15 +2242,15 @@ function buildEnemyModel(waveNum, type) {
   g.scale.setScalar(baseScale);
 
   const armorMat = new THREE.MeshStandardMaterial({
-    color: armorColor, roughness: 0.36, metalness: 0.76,
-    emissive: emissiveColor, emissiveIntensity: 0.22
+    color: armorColor, roughness: 0.34, metalness: 0.8,
+    emissive: emissiveColor, emissiveIntensity: isBoss ? 0.34 : 0.22
   });
   const jointMat = new THREE.MeshStandardMaterial({
     color: 0x20293d, roughness: 0.45, metalness: 0.85
   });
   const headMat = new THREE.MeshStandardMaterial({
     color: 0x2b3854, roughness: 0.3, metalness: 0.85,
-    emissive: emissiveColor, emissiveIntensity: 0.25
+    emissive: emissiveColor, emissiveIntensity: 0.28
   });
   const laserGunMat = new THREE.MeshStandardMaterial({
     color: 0x1e293b, roughness: 0.28, metalness: 0.9
@@ -2133,6 +2272,13 @@ function buildEnemyModel(waveNum, type) {
   );
   visor.position.set(0, 1.8, 0.2); visor.userData = { part: 'head' }; g.add(visor);
 
+  if (isBoss) {
+    const crown = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.045, 8, 20), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
+    crown.rotation.x = Math.PI / 2;
+    crown.position.y = 2.06;
+    g.add(crown);
+  }
+
   const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.66, 0.2), jointMat);
   armL.position.set(-0.46, 1.14, 0.24); armL.rotation.set(-0.95, 0.32, 0); armL.userData = { part: 'body' };
   const armR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.66, 0.2), jointMat);
@@ -2153,24 +2299,10 @@ function buildEnemyModel(waveNum, type) {
   laserGunGroup.position.set(0.34, 1.16, 0.36);
   g.add(laserGunGroup);
 
-  if (stage === 0) {
-    const pauldronL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.34), armorMat);
-    pauldronL.position.set(-0.5, 1.48, 0); pauldronL.userData = { part: 'body' };
-    const pauldronR = pauldronL.clone(); pauldronR.position.x = 0.5;
-    g.add(pauldronL, pauldronR);
-  } else if (stage === 1) {
-    const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.12, 0.14), armorMat);
-    wingL.position.set(-0.52, 1.45, -0.26); wingL.rotation.z = 0.35; wingL.userData = { part: 'body' };
-    const wingR = wingL.clone(); wingR.position.x = 0.52; wingR.rotation.z = -0.35;
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: visorColor }));
-    fin.position.set(0, 2.08, -0.02);
-    g.add(wingL, wingR, fin);
-  } else {
-    const podL = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.52), jointMat);
-    podL.position.set(-0.56, 1.56, 0.04); podL.userData = { part: 'body' };
-    const podR = podL.clone(); podR.position.x = 0.56;
-    g.add(podL, podR);
-  }
+  const podL = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.52), jointMat);
+  podL.position.set(-0.56, 1.56, 0.04); podL.userData = { part: 'body' };
+  const podR = podL.clone(); podR.position.x = 0.56;
+  g.add(podL, podR);
 
   const legL = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.68, 0.26), jointMat);
   legL.position.set(-0.2, 0.34, 0); legL.castShadow = true; legL.userData = { part: 'body' };
@@ -2178,54 +2310,63 @@ function buildEnemyModel(waveNum, type) {
   legR.position.set(0.2, 0.34, 0); legR.castShadow = true; legR.userData = { part: 'body' };
   g.add(legL, legR);
 
-  const hpBg = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.09), new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }));
-  hpBg.position.y = 2.28;
-  const hpFill = new THREE.Mesh(new THREE.PlaneGeometry(0.91, 0.06), new THREE.MeshBasicMaterial({ color: emissiveColor, side: THREE.DoubleSide }));
-  hpFill.position.set(0, 2.28, 0.01);
+  const hpBg = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 0.1), new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }));
+  hpBg.position.y = 2.34;
+  const hpFill = new THREE.Mesh(new THREE.PlaneGeometry(1.01, 0.068), new THREE.MeshBasicMaterial({ color: emissiveColor, side: THREE.DoubleSide }));
+  hpFill.position.set(0, 2.34, 0.01);
   g.add(hpBg, hpFill);
 
   return { group: g, armorMat, headMat, hpFill, legL, legR, laserGunGroup, lgMuzzle, stage, radius: 0.62 * baseScale };
 }
 
-function spawnEnemy() {
+function createEnemyEntity(isBoss = false) {
   const roll = Math.random();
   let type = 0;
-  if (state.wave >= 2 && roll < 0.28) type = 1;
+  if (isBoss) type = 1;
+  else if (state.wave >= 2 && roll < 0.28) type = 1;
   else if (roll < 0.62) type = 2;
 
   const currentWave = Math.max(1, state.wave);
-  const built = buildEnemyModel(currentWave, type);
+  const built = buildEnemyModel(currentWave, type, isBoss);
   const g = built.group;
 
   let x, z;
   do {
     x = (Math.random() - 0.5) * (ARENA * 1.72);
     z = (Math.random() - 0.5) * (ARENA * 1.72);
-  } while (Math.hypot(x - player.pos.x, z - player.pos.z) < 20 || checkCircleObstacle(x, z, built.radius + 0.45));
+  } while (Math.hypot(x - player.pos.x, z - player.pos.z) < 22 || checkCircleObstacle(x, z, built.radius + 0.5));
 
   g.position.set(x, 0, z);
 
-  const level = currentWave + (type === 1 ? 2 : (type === 2 ? 1 : 0));
-  const baseSpeed = type === 1 ? 3.2 : (type === 0 ? 4.4 : 3.7);
-  const chaseSpeed = baseSpeed + (level - 1) * 0.45;
-  const patrolSpeed = chaseSpeed * 0.55;
-  const bulletDmg = Math.round((type === 1 ? 16 : (type === 2 ? 12 : 10)) * (1 + (level - 1) * 0.16));
-  const meleeDmg = Math.round((type === 1 ? 24 : 15) * (1 + (level - 1) * 0.16));
+  const level = currentWave + (isBoss ? 4 : (type === 1 ? 2 : (type === 2 ? 1 : 0)));
+  // 8. 越往后面关卡外星人移动速度越快
+  const waveSpeedBoost = (currentWave - 1) * 0.58;
+  const baseSpeed = isBoss ? 3.5 : (type === 1 ? 3.2 : (type === 0 ? 4.5 : 3.8));
+  const chaseSpeed = baseSpeed + waveSpeedBoost + (level - 1) * 0.22;
+  const patrolSpeed = chaseSpeed * 0.6;
+  const bulletDmg = Math.round((isBoss ? 22 : (type === 1 ? 16 : (type === 2 ? 12 : 10))) * (1 + (level - 1) * 0.16));
+  const meleeDmg = Math.round((isBoss ? 34 : (type === 1 ? 24 : 15)) * (1 + (level - 1) * 0.16));
+  const maxHp = isBoss
+    ? (620 + currentWave * 140)
+    : ((type === 1 ? 250 : (type === 2 ? 90 : 105)) + currentWave * 14);
 
   const initAngle = Math.random() * Math.PI * 2;
   g.userData = {
     isEnemy: true,
+    isBoss,
     type,
     level,
     stage: built.stage,
     radius: built.radius,
-    hp: (type === 1 ? 250 : (type === 2 ? 90 : 105)) + currentWave * 14,
-    maxHp: (type === 1 ? 250 : (type === 2 ? 90 : 105)) + currentWave * 14,
+    hp: maxHp,
+    maxHp,
     patrolSpeed,
     chaseSpeed,
     bulletDmg,
     meleeDmg,
     alerted: false,
+    searchTarget: null,
+    searchTimer: 0,
     patrolDir: new THREE.Vector3(Math.cos(initAngle), 0, Math.sin(initAngle)),
     patrolTimer: 1.5 + Math.random() * 2.5,
     cooldown: 0,
@@ -2244,6 +2385,66 @@ function spawnEnemy() {
   enemies.push(g);
 }
 
+function spawnEnemy() {
+  createEnemyEntity(false);
+}
+
+function spawnBoss() {
+  createEnemyEntity(true);
+}
+
+// 5. 开枪吸引附近外星人过来搜寻
+function alertEnemiesByGunshot(shotPos) {
+  const hearRadius = gear.silencer ? 14 : 46;
+  for (const e of enemies) {
+    const d = e.position.distanceTo(shotPos);
+    if (d <= hearRadius) {
+      e.userData.searchTarget = new THREE.Vector3(shotPos.x, 0, shotPos.z);
+      e.userData.searchTimer = 6.5;
+    }
+  }
+}
+
+// 6. 击杀大 BOSS 获得随机装备（跨波次使用，重开消失）
+function grantRandomBossGear() {
+  const pool = ['extMag', 'upgrade', 'silencer', 'scope'];
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  let label = '';
+
+  if (pick === 'extMag') {
+    gear.extMagLevel++;
+    WEAPONS.forEach((w, idx) => {
+      state.ammo[idx] = getEffectiveMagSize(idx);
+    });
+    label = `装备【扩容弹夹 Lv.${gear.extMagLevel}】弹匣容量 +35%`;
+  } else if (pick === 'upgrade') {
+    gear.upgradeLevel++;
+    label = `装备【武器升级 Lv.${gear.upgradeLevel}】伤害 +22% / 射速 +12%`;
+  } else if (pick === 'silencer') {
+    gear.silencer = true;
+    label = '装备【战术消音器】枪声大幅静音，降低引怪范围';
+  } else {
+    gear.scopeLevel++;
+    label = `装备【高倍瞄准镜 Lv.${gear.scopeLevel}】开镜放大倍率提升`;
+  }
+
+  audio.bossGear();
+  renderGearBar();
+  addKillFeed('★ BOSS 掉落: ' + label, false, true);
+  showBanner('BOSS DROPPED GEAR', label);
+}
+
+function renderGearBar() {
+  const bar = document.getElementById('gear-bar');
+  if (!bar) return;
+  const chips = [];
+  if (gear.extMagLevel > 0) chips.push(`EXT-MAG Lv.${gear.extMagLevel}`);
+  if (gear.upgradeLevel > 0) chips.push(`UPGRADE Lv.${gear.upgradeLevel}`);
+  if (gear.silencer) chips.push('SILENCER');
+  if (gear.scopeLevel > 0) chips.push(`OPTIC Lv.${gear.scopeLevel}`);
+  bar.innerHTML = chips.map(c => `<div class="gear-chip">${c}</div>`).join('');
+}
+
 function spawnPickup(pos) {
   if (Math.random() > 0.45) return;
   const isShield = Math.random() > 0.45;
@@ -2260,7 +2461,7 @@ function spawnPickup(pos) {
 }
 
 /* ============================================================
-   7. 严密实体防穿模、红绿灯车流更新、粒子、爆炸与射击判定
+   7. 严密实体防穿模、车辆出界消失与重进、粒子、爆炸与射击判定
 ============================================================ */
 function checkCircleObstacle(x, z, r) {
   if (Math.abs(x) > ARENA - r || Math.abs(z) > ARENA - r) return true;
@@ -2313,7 +2514,7 @@ function shouldStopAtSignal(hc, nowSec) {
   const signal = getSignalForAxis(hc.axis, nowSec);
   if (signal === 'green') return false;
 
-  const stopLineDist = 11.5; // 路口中心在 ±24，停止线在距路口 11.5m 处（即 ±12.5 附近）
+  const stopLineDist = 11.5;
   const intersections = [-24, 24];
 
   if (hc.axis === 'z') {
@@ -2351,9 +2552,11 @@ function hasCarAhead(hc) {
   return false;
 }
 
+// 3. 车辆直接开出边界后再消失（随后从对面边界外重新驶入，保持车道车流）
 function updateHighwayCars(dt) {
   if (dt <= 0) return;
   const nowSec = performance.now() * 0.001;
+  const exitBound = ARENA + 8;
 
   for (const hc of highwayCars) {
     const mustStop = shouldStopAtSignal(hc, nowSec) || hasCarAhead(hc);
@@ -2368,12 +2571,16 @@ function updateHighwayCars(dt) {
     const moveDelta = hc.curSpeed * hc.dir * dt;
     if (hc.axis === 'z') {
       hc.mesh.position.z += moveDelta;
-      if (hc.mesh.position.z > ARENA - 6) hc.mesh.position.z = -ARENA + 6;
-      if (hc.mesh.position.z < -ARENA + 6) hc.mesh.position.z = ARENA - 6;
+      if ((hc.dir > 0 && hc.mesh.position.z > exitBound) || (hc.dir < 0 && hc.mesh.position.z < -exitBound)) {
+        hc.mesh.position.z = -hc.dir * exitBound;
+        hc.curSpeed = hc.maxSpeed;
+      }
     } else {
       hc.mesh.position.x += moveDelta;
-      if (hc.mesh.position.x > ARENA - 6) hc.mesh.position.x = -ARENA + 6;
-      if (hc.mesh.position.x < -ARENA + 6) hc.mesh.position.x = ARENA - 6;
+      if ((hc.dir > 0 && hc.mesh.position.x > exitBound) || (hc.dir < 0 && hc.mesh.position.x < -exitBound)) {
+        hc.mesh.position.x = -hc.dir * exitBound;
+        hc.curSpeed = hc.maxSpeed;
+      }
     }
 
     hc.collider.minX = hc.mesh.position.x - hc.hw;
@@ -2427,12 +2634,29 @@ function detonateBarrel(barrel) {
 const raycaster = new THREE.Raycaster();
 const losRaycaster = new THREE.Raycaster();
 
-function hasLineOfSightToPlayer(enemyPos) {
+// 7. 让外星人视力好一点：玩家能看见他时他就能看见我
+function isPlayerSeeingEnemy(enemy) {
+  const targetPos = enemy.position.clone().setY(1.35);
+  const toEnemy = new THREE.Vector3().subVectors(targetPos, camera.position);
+  const dist = toEnemy.length();
+  if (dist > 82) return false;
+  const camForward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
+  toEnemy.normalize();
+  if (camForward.dot(toEnemy) < 0.35) return false;
+  losRaycaster.set(camera.position, toEnemy);
+  losRaycaster.far = dist;
+  const obstacleMeshes = colliders.filter(c => c.mesh && c.height >= 2.0).map(c => c.mesh);
+  const hits = losRaycaster.intersectObjects(obstacleMeshes, false);
+  return hits.length === 0;
+}
+
+function hasLineOfSightToPlayer(enemyPos, enemyObj = null) {
+  if (enemyObj && isPlayerSeeingEnemy(enemyObj)) return true;
   const origin = new THREE.Vector3(enemyPos.x, 1.45, enemyPos.z);
   const target = new THREE.Vector3(player.pos.x, player.pos.y - 0.2, player.pos.z);
   const toPlayer = new THREE.Vector3().subVectors(target, origin);
   const dist = toPlayer.length();
-  if (dist > 46) return false;
+  if (dist > 78) return false;
   toPlayer.normalize();
   losRaycaster.set(origin, toPlayer);
   losRaycaster.far = dist;
@@ -2453,9 +2677,11 @@ function triggerHitmarker(isCrit) {
 
 function shoot() {
   const w = WEAPONS[state.weaponIdx];
+  const fireRate = getEffectiveFireRate(state.weaponIdx);
+  const dmgBase = getEffectiveDamage(state.weaponIdx);
   if (state.reloading || state.ammo[state.weaponIdx] <= 0 || state.gameOver || state.paused) return;
   const now = performance.now() / 1000;
-  if (now - state.lastShot < w.fireRate) return;
+  if (now - state.lastShot < fireRate) return;
 
   state.lastShot = now;
   state.ammo[state.weaponIdx]--;
@@ -2463,12 +2689,13 @@ function shoot() {
   state.boltKick = 1;
   state.recoilPitch += w.recoil * (state.ads ? 0.6 : 1);
   state.recoilYaw += (Math.random() - 0.5) * w.recoil * 0.45;
-  state.shake = Math.max(state.shake, w.recoil * 1.3);
+  state.shake = Math.max(state.shake, w.recoil * (gear.silencer ? 0.85 : 1.3));
 
   audio.shoot(state.weaponIdx);
+  alertEnemiesByGunshot(player.pos);
 
   muzzle.material.color.setHex(w.color);
-  muzzle.material.opacity = 0.85;
+  muzzle.material.opacity = gear.silencer ? 0.28 : 0.85;
   muzzle.rotation.z = Math.random() * Math.PI * 2;
   muzzle.scale.setScalar(w.id === 1 ? 1.35 : 0.95);
 
@@ -2500,7 +2727,7 @@ function shoot() {
         const obj = h.object;
         if (obj.userData.isBarrel) {
           endPoint = h.point;
-          obj.userData.hp -= w.damage;
+          obj.userData.hp -= dmgBase;
           spawnParticles(h.point, 0xffaa00, 6, 3, 0.3);
           if (obj.userData.hp <= 0) detonateBarrel(obj);
           break;
@@ -2509,7 +2736,7 @@ function shoot() {
           endPoint = h.point;
           const enemy = obj.parent;
           const isHead = obj.userData.part === 'head';
-          const dmg = Math.round(w.damage * (isHead ? w.headshotMult : 1));
+          const dmg = Math.round(dmgBase * (isHead ? w.headshotMult : 1));
           damageEnemy(enemy, dmg, h.point, isHead);
           hitCount++;
           if (hitCount >= maxHits) break;
@@ -2550,9 +2777,10 @@ function killEnemy(enemy, isHeadshot) {
   const idx = enemies.indexOf(enemy);
   if (idx >= 0) enemies.splice(idx, 1);
 
-  const pos = enemy.position.clone().setY(1.2);
-  spawnParticles(pos, 0xff2d55, 28, 6, 0.7);
-  spawnParticles(pos, 0x06b6d4, 14, 4.5, 0.55);
+  const isBoss = !!enemy.userData.isBoss;
+  const pos = enemy.position.clone().setY(isBoss ? 2.2 : 1.2);
+  spawnParticles(pos, isBoss ? 0xfbbf24 : 0xff2d55, isBoss ? 52 : 28, isBoss ? 8.5 : 6, 0.75);
+  spawnParticles(pos, 0x06b6d4, isBoss ? 28 : 14, 5.5, 0.6);
   spawnPickup(enemy.position);
   audio.explode();
   scene.remove(enemy);
@@ -2562,12 +2790,17 @@ function killEnemy(enemy, isHeadshot) {
   state.combo++;
   state.comboTimer = 4.0;
 
-  const bonus = (100 + state.wave * 25) * (isHeadshot ? 1.5 : 1) * Math.min(4, 1 + (state.combo - 1) * 0.25);
+  const basePts = isBoss ? 600 : 100;
+  const bonus = (basePts + state.wave * (isBoss ? 80 : 25)) * (isHeadshot ? 1.5 : 1) * Math.min(4, 1 + (state.combo - 1) * 0.25);
   state.score += Math.round(bonus);
 
-  const typeNames = ['突击兵', '重装机甲', '幽灵射手'];
-  const label = (isHeadshot ? '⊕ 爆头击杀 ' : '击杀 ') + typeNames[enemy.userData.type] + ' +' + Math.round(bonus);
-  addKillFeed(label, isHeadshot);
+  if (isBoss) {
+    grantRandomBossGear();
+  } else {
+    const typeNames = ['突击兵', '重装机甲', '幽灵射手'];
+    const label = (isHeadshot ? '⊕ 爆头击杀 ' : '击杀 ') + typeNames[enemy.userData.type] + ' +' + Math.round(bonus);
+    addKillFeed(label, isHeadshot, false);
+  }
   updateHUD();
 }
 
@@ -2599,10 +2832,12 @@ function hurtPlayer(dmg) {
   updateHUD();
 }
 
+// 9. 武器切换音效
 function switchWeapon(idx) {
   if (idx === state.weaponIdx || idx < 0 || idx >= WEAPONS.length) return;
   state.weaponIdx = idx;
   state.reloading = false;
+  audio.switchWeaponSound();
   const w = WEAPONS[idx];
   gunNeonMat.color.setHex(w.color);
   gunGlowCoreMat.color.setHex(w.tracerColor);
@@ -2615,7 +2850,8 @@ function switchWeapon(idx) {
 
 function startReload() {
   const w = WEAPONS[state.weaponIdx];
-  if (state.reloading || state.ammo[state.weaponIdx] === w.magSize) return;
+  const effMag = getEffectiveMagSize(state.weaponIdx);
+  if (state.reloading || state.ammo[state.weaponIdx] >= effMag) return;
   state.reloading = true;
   state.reloadDuration = w.reloadTime;
   state.reloadTimer = w.reloadTime;
@@ -2624,7 +2860,7 @@ function startReload() {
 }
 
 /* ============================================================
-   8. 波次与关卡阶段提示
+   8. 波次、大 BOSS 刷新与关卡阶段提示
 ============================================================ */
 function getStageTitle(waveNum) {
   const stage = (waveNum - 1) % 3;
@@ -2635,16 +2871,22 @@ function getStageTitle(waveNum) {
 
 function updateWave(dt) {
   if (state.gameOver) return;
-  if (enemies.length === 0 && state.enemiesToSpawn === 0) {
+  if (enemies.length === 0 && state.enemiesToSpawn === 0 && !state.bossToSpawn) {
     state.waveBreak -= dt;
     if (state.waveBreak <= 0) {
       state.wave++;
       state.waveBreak = 2.8;
       state.enemiesToSpawn = 7 + state.wave * 3;
+      state.bossToSpawn = true; // 6. 每局刷新一个大 BOSS
       state.spawnTimer = 0;
       const wStr = String(state.wave).padStart(2, '0');
       showBanner('WAVE ' + wStr, getStageTitle(state.wave));
     }
+  }
+  if (state.bossToSpawn) {
+    state.bossToSpawn = false;
+    spawnBoss();
+    addKillFeed('⚠ 巨型外星 BOSS 已降临战区！', false, true);
   }
   if (state.enemiesToSpawn > 0) {
     state.spawnTimer -= dt;
@@ -2731,13 +2973,13 @@ document.getElementById('start-btn').addEventListener('click', () => {
 
 document.getElementById('restart-btn').addEventListener('click', () => location.reload());
 
-function addKillFeed(text, isHeadshot = false) {
+function addKillFeed(text, isHeadshot = false, isBoss = false) {
   const feed = document.getElementById('kill-feed');
   const el = document.createElement('div');
-  el.className = 'kill-item' + (isHeadshot ? ' headshot' : '');
+  el.className = 'kill-item' + (isBoss ? ' boss' : (isHeadshot ? ' headshot' : ''));
   el.textContent = text;
   feed.appendChild(el);
-  setTimeout(() => el.remove(), 2400);
+  setTimeout(() => el.remove(), 2600);
 }
 
 let bannerTimer = null;
@@ -2781,9 +3023,9 @@ function updateRadar() {
     const clampR = Math.min(64, dist);
     const ang = Math.atan2(rz, rx);
 
-    radarCtx.fillStyle = e.userData.type === 1 ? '#ff9100' : (e.userData.alerted ? '#ff2d55' : '#f472b6');
+    radarCtx.fillStyle = e.userData.isBoss ? '#fbbf24' : (e.userData.type === 1 ? '#ff9100' : (e.userData.alerted ? '#ff2d55' : '#f472b6'));
     radarCtx.beginPath();
-    radarCtx.arc(cx + Math.cos(ang) * clampR, cy + Math.sin(ang) * clampR, e.userData.type === 1 ? 4 : 3, 0, Math.PI * 2);
+    radarCtx.arc(cx + Math.cos(ang) * clampR, cy + Math.sin(ang) * clampR, e.userData.isBoss ? 5.5 : (e.userData.type === 1 ? 4 : 3), 0, Math.PI * 2);
     radarCtx.fill();
   }
 
@@ -2800,7 +3042,7 @@ function updateHUD() {
   document.getElementById('score-value').textContent = state.score;
   document.getElementById('kills-value').textContent = state.kills;
   document.getElementById('wave-value').textContent = String(state.wave || 1).padStart(2, '0');
-  document.getElementById('remain-value').textContent = enemies.length + state.enemiesToSpawn;
+  document.getElementById('remain-value').textContent = enemies.length + state.enemiesToSpawn + (state.bossToSpawn ? 1 : 0);
   document.getElementById('ammo-value').innerHTML = state.ammo[state.weaponIdx] + '<small> / ∞</small>';
 
   document.getElementById('shield-fill').style.width = Math.max(0, state.shield) + '%';
@@ -2830,7 +3072,7 @@ function endGame() {
 }
 
 /* ============================================================
-   11. 玩家、瞄准镜、枪机与换弹夹动画、敌军激光枪索敌追击与主循环更新
+   11. 玩家、瞄准镜、枪机与换弹夹动画、敌军搜寻与射击及主循环
 ============================================================ */
 function updatePlayer(rawDt) {
   if (state.bulletTime) {
@@ -2903,7 +3145,7 @@ function updatePlayer(rawDt) {
   state.adsLerp += ((adsActive ? 1 : 0) - state.adsLerp) * Math.min(1, rawDt * 16);
 
   const baseFov = sprint ? 82 : 75;
-  const targetFov = THREE.MathUtils.lerp(baseFov, WEAPONS[state.weaponIdx].fov, state.adsLerp);
+  const targetFov = THREE.MathUtils.lerp(baseFov, getEffectiveFov(state.weaponIdx), state.adsLerp);
   camera.fov += (targetFov - camera.fov) * Math.min(1, rawDt * 16);
   camera.updateProjectionMatrix();
 
@@ -2911,6 +3153,11 @@ function updatePlayer(rawDt) {
   const holoOptic = document.getElementById('holo-optic');
   const sniperOptic = document.getElementById('sniper-optic');
   opticOverlay.classList.toggle('active', state.adsLerp > 0.35);
+
+  const holoMag = (1.5 * Math.pow(1.22, gear.scopeLevel)).toFixed(1);
+  const sniperMag = (4.0 * Math.pow(1.25, gear.scopeLevel)).toFixed(1);
+  document.getElementById('holo-tag-txt').textContent = `HOLO-SIGHT // ${holoMag}X`;
+  document.getElementById('sniper-zoom-txt').textContent = `RAIL-OPTIC // ${sniperMag}X ZOOM`;
 
   if (state.weaponIdx === 2) {
     holoOptic.style.display = 'none';
@@ -2965,7 +3212,7 @@ function updatePlayer(rawDt) {
     reloadGunRollZ = state.weaponIdx === 0 ? -0.18 : 0;
     if (state.reloadTimer <= 0) {
       state.reloading = false;
-      state.ammo[state.weaponIdx] = WEAPONS[state.weaponIdx].magSize;
+      state.ammo[state.weaponIdx] = getEffectiveMagSize(state.weaponIdx);
       updateHUD();
     }
   }
@@ -2997,14 +3244,16 @@ function updateEnemies(dt) {
     const dist = toPlayer.length();
     if (dist > 0.001) toPlayer.normalize();
 
-    const canSee = !state.gameOver && hasLineOfSightToPlayer(enemy.position);
+    const canSee = !state.gameOver && hasLineOfSightToPlayer(enemy.position, enemy);
     if (canSee) {
       ud.alerted = true;
+      ud.searchTarget = null;
+      ud.searchTimer = 0;
     }
 
     if (ud.alerted && !state.gameOver) {
       enemy.lookAt(player.pos.x, 0, player.pos.z);
-      const minKeepDist = ud.type === 1 ? 1.85 : 2.6;
+      const minKeepDist = ud.isBoss ? 2.8 : (ud.type === 1 ? 1.85 : 2.6);
       if (dist > minKeepDist) {
         resolveMovement(enemy.position, toPlayer.x * ud.chaseSpeed * dt, toPlayer.z * ud.chaseSpeed * dt, eRadius);
         ud.walkPhase += dt * ud.chaseSpeed * 3.4;
@@ -3013,8 +3262,8 @@ function updateEnemies(dt) {
       }
 
       ud.shootCd -= dt;
-      if (canSee && dist < 44 && ud.shootCd <= 0) {
-        ud.shootCd = Math.max(0.55, (ud.type === 1 ? 1.25 : 1.55) - (ud.level - 1) * 0.06);
+      if (canSee && dist < 56 && ud.shootCd <= 0) {
+        ud.shootCd = Math.max(0.45, (ud.isBoss ? 0.95 : (ud.type === 1 ? 1.25 : 1.55)) - (ud.level - 1) * 0.06);
         const from = new THREE.Vector3();
         ud.lgMuzzle.getWorldPosition(from);
         const aimDir = new THREE.Vector3().subVectors(player.pos, from).normalize();
@@ -3022,9 +3271,27 @@ function updateEnemies(dt) {
         const b = new THREE.Mesh(laserBoltGeo, laserBoltMat);
         b.position.copy(from);
         b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), aimDir);
+        if (ud.isBoss) b.scale.setScalar(1.65);
         b.userData = { vel: aimDir.multiplyScalar(PLAYER_BULLET_SPEED), dmg: ud.bulletDmg, life: 2.2 };
         scene.add(b);
         enemyBullets.push(b);
+      }
+    } else if (ud.searchTarget && ud.searchTimer > 0 && !state.gameOver) {
+      // 5. 听见枪声往开枪地方靠近搜寻
+      ud.searchTimer -= dt;
+      const toShot = new THREE.Vector3().subVectors(ud.searchTarget, enemy.position);
+      toShot.y = 0;
+      const shotDist = toShot.length();
+      if (shotDist > 1.4) {
+        toShot.normalize();
+        enemy.lookAt(ud.searchTarget.x, 0, ud.searchTarget.z);
+        const searchSpeed = ud.chaseSpeed * 0.88;
+        resolveMovement(enemy.position, toShot.x * searchSpeed * dt, toShot.z * searchSpeed * dt, eRadius);
+        ud.walkPhase += dt * searchSpeed * 3.2;
+        ud.legL.rotation.x = Math.sin(ud.walkPhase) * 0.56;
+        ud.legR.rotation.x = -Math.sin(ud.walkPhase) * 0.56;
+      } else {
+        ud.searchTarget = null;
       }
     } else {
       ud.patrolTimer -= dt;
@@ -3049,11 +3316,12 @@ function updateEnemies(dt) {
 
     if (ud.flash > 0) {
       ud.flash -= dt * 5;
-      ud.bodyMat.emissiveIntensity = 0.22 + Math.max(0, ud.flash) * 0.65;
+      ud.bodyMat.emissiveIntensity = (ud.isBoss ? 0.34 : 0.22) + Math.max(0, ud.flash) * 0.65;
     }
 
     ud.cooldown -= dt;
-    if (!state.gameOver && dist < 2.1 && ud.cooldown <= 0) {
+    const meleeRange = ud.isBoss ? 3.2 : 2.1;
+    if (!state.gameOver && dist < meleeRange && ud.cooldown <= 0) {
       ud.cooldown = 0.9;
       hurtPlayer(ud.meleeDmg);
     }
@@ -3158,6 +3426,7 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
 });
 
+renderGearBar();
 updateHUD();
 </script>
 </body>
