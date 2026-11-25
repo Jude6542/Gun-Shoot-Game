@@ -369,7 +369,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 /* ============================================================
    1. 拓宽的战区配置与三系重火力武器库
 ============================================================ */
-const ARENA = 52; // 从 34 拓宽至 52（104m x 104m 宽阔战术战场）
+const ARENA = 52;
 const canvas = document.getElementById('game-canvas');
 const radarCanvas = document.getElementById('radar-canvas');
 const radarCtx = radarCanvas.getContext('2d');
@@ -379,19 +379,19 @@ const WEAPONS = [
     id: 0, name: 'V-47 PULSE RIFLE', mode: 'AUTO // 750 RPM',
     magSize: 32, fireRate: 0.085, damage: 28, headshotMult: 2.2,
     pellets: 1, spread: 0.011, adsSpread: 0.0015, recoil: 0.022,
-    reloadTime: 1.2, color: 0x00e5ff, tracerColor: 0x7df9ff, fov: 54
+    reloadTime: 1.25, color: 0x00f0ff, tracerColor: 0x7df9ff, fov: 54
   },
   {
     id: 1, name: 'SG-8 PLASMA BREACHER', mode: 'BUCKSHOT // 8 PELLETS',
     magSize: 8, fireRate: 0.6, damage: 24, headshotMult: 1.75,
     pellets: 8, spread: 0.08, adsSpread: 0.042, recoil: 0.08,
-    reloadTime: 1.45, color: 0xff2d8f, tracerColor: 0xff77b7, fov: 60
+    reloadTime: 1.45, color: 0x9eff00, tracerColor: 0xc8ff4d, fov: 60
   },
   {
     id: 2, name: 'XR-9 RAILGUN SNIPER', mode: 'HYPER-VELOCITY // PIERCING',
     magSize: 5, fireRate: 0.92, damage: 145, headshotMult: 3.0,
     pellets: 1, spread: 0.007, adsSpread: 0.0001, recoil: 0.1,
-    reloadTime: 1.6, color: 0xffd166, tracerColor: 0xffe699, fov: 22
+    reloadTime: 1.6, color: 0x1e9bff, tracerColor: 0x66d9ff, fov: 22
   }
 ];
 
@@ -405,11 +405,11 @@ const state = {
   score: 0, wave: 0, kills: 0, headshots: 0,
   combo: 0, comboTimer: 0,
   enemiesToSpawn: 0, spawnTimer: 0, waveBreak: 2.0,
-  reloading: false, reloadTimer: 0,
+  reloading: false, reloadTimer: 0, reloadDuration: 1.25,
   lastShot: 0,
   ads: false, adsLerp: 0,
   bulletTime: false, timeScale: 1,
-  recoilPitch: 0, recoilYaw: 0, gunKick: 0,
+  recoilPitch: 0, recoilYaw: 0, gunKick: 0, boltKick: 0,
   shake: 0,
   hurtFlash: 0, shieldFlash: 0,
   bobTime: 0
@@ -429,7 +429,7 @@ const keys = {};
 let mouseDown = false;
 
 /* ============================================================
-   2. 渲染器 / 照明（提升环境照明，避免暗部死黑）
+   2. 渲染器 / 照明
 ============================================================ */
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -437,7 +437,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.28;
+renderer.toneMappingExposure = 1.3;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x060914);
@@ -448,14 +448,13 @@ camera.rotation.order = 'YXZ';
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.68, 0.38, 0.25);
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.78, 0.42, 0.2);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-// 充足的环境光与补光，确保枪械和掩体细节清晰可见
-scene.add(new THREE.HemisphereLight(0x6699cc, 0x162038, 1.25));
+scene.add(new THREE.HemisphereLight(0x6699cc, 0x162038, 1.28));
 
-const dirLight = new THREE.DirectionalLight(0xb8dcff, 1.65);
+const dirLight = new THREE.DirectionalLight(0xb8dcff, 1.7);
 dirLight.position.set(24, 42, 20);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.set(2048, 2048);
@@ -467,7 +466,7 @@ dirLight.shadow.camera.top = dSize; dirLight.shadow.camera.bottom = -dSize;
 dirLight.shadow.bias = -0.0005;
 scene.add(dirLight);
 
-const rimLight = new THREE.DirectionalLight(0xff4d9d, 0.55);
+const rimLight = new THREE.DirectionalLight(0xff4d9d, 0.58);
 rimLight.position.set(-28, 18, -24);
 scene.add(rimLight);
 
@@ -572,26 +571,22 @@ function addCylinderPillar(x, z, r, h, accent = 0) {
   });
 }
 
-// 外围边界墙
 addCoverBox(0, -ARENA - 1, ARENA * 2 + 4, 9, 2, 0);
 addCoverBox(0, ARENA + 1, ARENA * 2 + 4, 9, 2, 1);
 addCoverBox(-ARENA - 1, 0, 2, 9, ARENA * 2 + 4, 0);
 addCoverBox(ARENA + 1, 0, 2, 9, ARENA * 2 + 4, 1);
 
-// 拓宽地图后的丰富障碍群（中央堡垒、环形立柱、侧翼掩体、狙击高墙）
 addCoverBox(0, 0, 5.2, 2.4, 5.2, 1);
 addCoverBox(-14, -14, 4.5, 4.2, 1.6, 0);
 addCoverBox(14, 14, 4.5, 4.2, 1.6, 0);
 addCoverBox(14, -14, 1.6, 4.2, 4.5, 1);
 addCoverBox(-14, 14, 1.6, 4.2, 4.5, 1);
 
-// 矮掩体（可架枪与滑铲穿行）
 addCoverBox(0, -24, 8.0, 1.35, 1.4, 2);
 addCoverBox(0, 24, 8.0, 1.35, 1.4, 2);
 addCoverBox(-26, 0, 1.4, 1.35, 8.0, 2);
 addCoverBox(26, 0, 1.4, 1.35, 8.0, 2);
 
-// 外围大型机甲立柱与掩体阵列
 [[-34, -20], [34, -20], [-34, 20], [34, 20], [-20, -36], [20, -36], [-20, 36], [20, 36]].forEach(([x, z], i) => {
   addCylinderPillar(x, z, 1.45, 7.5, i % 2);
 });
@@ -602,7 +597,6 @@ addCoverBox(28, 32, 6.5, 3.6, 1.8, 1);
 addCoverBox(-40, -8, 1.8, 3.2, 6.0, 2);
 addCoverBox(40, 8, 1.8, 3.2, 6.0, 2);
 
-// 可引爆高能油桶
 const barrelGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 14);
 const barrelMat = new THREE.MeshStandardMaterial({
   color: 0x5c1422, roughness: 0.35, metalness: 0.65,
@@ -625,7 +619,6 @@ function spawnBarrel(x, z) {
   [9, -19], [-9, 19], [-28, -14], [28, 14]
 ].forEach(([x, z]) => spawnBarrel(x, z));
 
-// 漂浮尘埃
 const dustGeo = new THREE.BufferGeometry();
 const dustCount = 550;
 const dustPos = new Float32Array(dustCount * 3);
@@ -639,58 +632,497 @@ const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x55d6f
 scene.add(dust);
 
 /* ============================================================
-   4. 优化后的第一人称枪械建模（修复开镜遮挡 + 独立枪型细节）
+   4. 程序化皮肤贴图与三系枪械建模（步枪赛博荧光+枪机+换弹夹大改）
 ============================================================ */
+function createCyberBullpupSkinTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+
+  // 深空碳纤暗蓝底色，贴近写实武器金属与战损层次
+  const bg = ctx.createLinearGradient(0, 0, 512, 512);
+  bg.addColorStop(0, '#141c33');
+  bg.addColorStop(0.55, '#1d2b4d');
+  bg.addColorStop(1, '#11182b');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 512, 512);
+
+  // 细微金属拉丝与碳纤维网格
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 512; i += 8) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+  }
+
+  // 写实磨损刮痕与爪痕感高光
+  ctx.strokeStyle = 'rgba(226, 232, 240, 0.34)';
+  ctx.lineWidth = 2.5;
+  for (let s = 0; s < 36; s++) {
+    const sx = (s * 43) % 480 + 12;
+    const sy = (s * 71) % 470 + 14;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + 18 + (s % 14), sy - 6 + (s % 12));
+    ctx.stroke();
+  }
+
+  // 赛博荧光青蓝/品红斜切能量条纹
+  const neonGrad = ctx.createLinearGradient(0, 120, 512, 380);
+  neonGrad.addColorStop(0, '#00f5ff');
+  neonGrad.addColorStop(0.5, '#38bdf8');
+  neonGrad.addColorStop(1, '#e879f9');
+  ctx.fillStyle = neonGrad;
+
+  ctx.beginPath();
+  ctx.moveTo(28, 360);
+  ctx.lineTo(135, 130);
+  ctx.lineTo(165, 130);
+  ctx.lineTo(58, 360);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(310, 410);
+  ctx.lineTo(420, 140);
+  ctx.lineTo(445, 140);
+  ctx.lineTo(335, 410);
+  ctx.closePath();
+  ctx.fill();
+
+  // 顶部荧光刻度槽
+  ctx.fillStyle = '#00f5ff';
+  for (let x = 40; x < 470; x += 28) {
+    ctx.fillRect(x, 48, 12, 5);
+    ctx.fillRect(x + 6, 458, 10, 4);
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 8;
+  return tex;
+}
+
+function createShotgunSkinTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+
+  ctx.fillStyle = '#1e2447';
+  ctx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 420; i++) {
+    ctx.fillStyle = i % 2 === 0 ? 'rgba(49, 60, 112, 0.45)' : 'rgba(15, 19, 38, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(Math.random() * 512, Math.random() * 512, 18 + Math.random() * 28, 7 + Math.random() * 14, Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#dce6f7';
+  ctx.fillRect(110, 185, 250, 125);
+
+  ctx.strokeStyle = '#9eff00';
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.moveTo(0, 165);
+  ctx.bezierCurveTo(150, 95, 290, 265, 512, 145);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#b4ff1a';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(0, 345);
+  ctx.bezierCurveTo(180, 415, 330, 255, 512, 355);
+  ctx.stroke();
+
+  ctx.fillStyle = '#9eff00';
+  for (let sx = 120; sx < 380; sx += 34) {
+    ctx.beginPath();
+    ctx.moveTo(sx, 70);
+    ctx.lineTo(sx + 18, 70);
+    ctx.lineTo(sx + 8, 125);
+    ctx.lineTo(sx - 10, 125);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 8;
+  return tex;
+}
+
+const bullpupSkinTex = createCyberBullpupSkinTexture();
+const shotgunSkinTex = createShotgunSkinTexture();
+
 const weaponPivot = new THREE.Group();
 const gun = new THREE.Group();
 
-const gunAlloy = new THREE.MeshStandardMaterial({ color: 0x2a354b, roughness: 0.28, metalness: 0.85 });
-const gunCarbon = new THREE.MeshStandardMaterial({ color: 0x3b4863, roughness: 0.35, metalness: 0.75 });
-const gunNeonMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+const gunAlloy = new THREE.MeshStandardMaterial({ color: 0x1c2538, roughness: 0.24, metalness: 0.9 });
+const gunCarbon = new THREE.MeshStandardMaterial({ color: 0x26324a, roughness: 0.32, metalness: 0.82 });
+const gunAccentMat = new THREE.MeshStandardMaterial({ color: 0x121826, roughness: 0.38, metalness: 0.85 });
+const gunNeonMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+const gunGlowCoreMat = new THREE.MeshBasicMaterial({ color: 0x7df9ff });
 
-// 主机匣
-const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.13, 0.54), gunCarbon);
-// 枪管组（随武器切换形态）
+const rifleBodyMat = new THREE.MeshStandardMaterial({
+  map: bullpupSkinTex, roughness: 0.26, metalness: 0.78,
+  emissive: 0x0284c7, emissiveIntensity: 0.24
+});
+const rifleChromeMat = new THREE.MeshStandardMaterial({
+  color: 0x94a3b8, roughness: 0.2, metalness: 0.94,
+  emissive: 0x00f5ff, emissiveIntensity: 0.12
+});
+const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+const neonPinkMat = new THREE.MeshBasicMaterial({ color: 0xff2d8f });
+const neonLimeMat = new THREE.MeshBasicMaterial({ color: 0x9eff00 });
+
+const shotgunSkinMat = new THREE.MeshStandardMaterial({
+  map: shotgunSkinTex, roughness: 0.3, metalness: 0.68,
+  emissive: 0x4d7c0f, emissiveIntensity: 0.14
+});
+const limeTrimMat = new THREE.MeshBasicMaterial({ color: 0x9eff00 });
+const buttPadMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.45, metalness: 0.2 });
+
+const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.125, 0.44), gunCarbon);
+receiver.position.set(0, 0.01, -0.04);
+
+const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.02, 0.48), gunAlloy);
+topRail.position.set(0, 0.076, -0.1);
+
+// ------------------------------------------------------------
+// A. [1] 无托赛博荧光脉冲步枪（枪机往复运动 + 换弹夹动画 + 丰富荧光）
+// ------------------------------------------------------------
+const rifleModelGroup = new THREE.Group();
+
+// 1. 顶部高架提把/导轨桥架（贴近无托突击步枪经典轮廓）
+const carryBridgeTop = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.022, 0.44), gunAlloy);
+carryBridgeTop.position.set(0, 0.118, -0.16);
+
+const carryPostFront = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.045, 0.045), rifleBodyMat);
+carryPostFront.position.set(0, 0.092, -0.34);
+
+const carryPostRear = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.045, 0.045), rifleBodyMat);
+carryPostRear.position.set(0, 0.092, 0.02);
+
+// 提把顶部荧光导引灯条
+const carryNeonStrip = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.008, 0.38), neonCyanMat);
+carryNeonStrip.position.set(0, 0.131, -0.16);
+
+// 全息准星框（精简不挡视野）
+const holoHoodL = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.028, 0.055), gunAlloy);
+holoHoodL.position.set(-0.026, 0.142, -0.18);
+const holoHoodR = holoHoodL.clone();
+holoHoodR.position.x = 0.026;
+const holoReticleDot = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.006), neonPinkMat);
+holoReticleDot.position.set(0, 0.142, -0.18);
+
+// 2. 前段细枪管 + 荧光导能管 + 消焰器
+const rifleBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.019, 0.34, 14), rifleChromeMat);
+rifleBarrel.rotation.x = Math.PI / 2;
+rifleBarrel.position.set(0, 0.036, -0.53);
+
+const rifleBarrelNeon = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.008, 0.30, 10), neonCyanMat);
+rifleBarrelNeon.rotation.x = Math.PI / 2;
+rifleBarrelNeon.position.set(0, 0.056, -0.52);
+
+const rifleMuzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.02, 0.075, 12), gunAlloy);
+rifleMuzzle.rotation.x = Math.PI / 2;
+rifleMuzzle.position.set(0, 0.036, -0.72);
+
+// 3. 主机匣、侧边护框与荧光灯带
+const rifleChassis = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.125, 0.56), rifleBodyMat);
+rifleChassis.position.set(0, 0.015, -0.06);
+
+// 下方护手框体（无托前握区）
+const lowerForeFrame = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.024, 0.24), gunAlloy);
+lowerForeFrame.position.set(0, -0.062, -0.26);
+
+const foreGuardAngled = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.024, 0.12), rifleBodyMat);
+foreGuardAngled.position.set(0, -0.038, -0.14);
+foreGuardAngled.rotation.x = -0.38;
+
+// 机匣两侧荧光灯带（赛博感核心）
+const sideNeonLeftTop = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.012, 0.44), neonCyanMat);
+sideNeonLeftTop.position.set(-0.051, 0.055, -0.08);
+
+const sideNeonLeftBot = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.01, 0.34), neonPinkMat);
+sideNeonLeftBot.position.set(-0.051, -0.022, -0.10);
+
+const sideNeonRightTop = sideNeonLeftTop.clone();
+sideNeonRightTop.position.x = 0.051;
+
+const sideNeonRightBot = sideNeonLeftBot.clone();
+sideNeonRightBot.position.x = 0.051;
+
+// 4. 射击时来回移动的“枪机组件”（Bolt Carrier + 枪机拉柄 + 荧光导块）
+const boltAssembly = new THREE.Group();
+const boltCarrier = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.034, 0.13), rifleChromeMat);
+boltCarrier.position.set(-0.048, 0.026, -0.14);
+
+const boltChargingHandle = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.02, 0.026), neonPinkMat);
+boltChargingHandle.position.set(-0.062, 0.028, -0.14);
+
+const boltGlowStrip = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.01, 0.10), neonCyanMat);
+boltGlowStrip.position.set(-0.064, 0.026, -0.14);
+
+boltAssembly.add(boltCarrier, boltChargingHandle, boltGlowStrip);
+
+// 5. 独立可动“战术弹匣”（支持完整换弹夹抽出、掉落与重新插入动画）
+const rifleMagGroup = new THREE.Group();
+rifleMagGroup.position.set(0, -0.05, 0.06);
+
+const rifleMagBody = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.185, 0.095), rifleBodyMat);
+rifleMagBody.position.set(0, -0.09, 0);
+rifleMagBody.rotation.x = -0.22;
+
+const rifleMagNeonEdge = new THREE.Mesh(new THREE.BoxGeometry(0.064, 0.15, 0.012), neonCyanMat);
+rifleMagNeonEdge.position.set(0, -0.09, 0.046);
+rifleMagNeonEdge.rotation.x = -0.22;
+
+const rifleMagBasePlate = new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.022, 0.105), gunAlloy);
+rifleMagBasePlate.position.set(0, -0.182, 0.02);
+rifleMagBasePlate.rotation.x = -0.22;
+
+rifleMagGroup.add(rifleMagBody, rifleMagNeonEdge, rifleMagBasePlate);
+
+// 6. 握把与后部托腮块
+const rifleGrip = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.125, 0.072), gunAlloy);
+rifleGrip.position.set(0, -0.095, -0.11);
+rifleGrip.rotation.x = 0.24;
+
+const rifleButtPad = new THREE.Mesh(new THREE.BoxGeometry(0.104, 0.145, 0.035), gunAlloy);
+rifleButtPad.position.set(0, 0.01, 0.23);
+
+const rifleButtNeon = new THREE.Mesh(new THREE.BoxGeometry(0.108, 0.125, 0.008), neonCyanMat);
+rifleButtNeon.position.set(0, 0.01, 0.249);
+
+rifleModelGroup.add(
+  carryBridgeTop, carryPostFront, carryPostRear, carryNeonStrip,
+  holoHoodL, holoHoodR, holoReticleDot,
+  rifleBarrel, rifleBarrelNeon, rifleMuzzle,
+  rifleChassis, lowerForeFrame, foreGuardAngled,
+  sideNeonLeftTop, sideNeonLeftBot, sideNeonRightTop, sideNeonRightBot,
+  boltAssembly, rifleMagGroup, rifleGrip, rifleButtPad, rifleButtNeon
+);
+
+// ------------------------------------------------------------
+// B. [2] 等离霰弹枪专属建模（荧光酸橙+深靛蓝迷彩、滑动护木、截短托）
+// ------------------------------------------------------------
+const shotgunModelGroup = new THREE.Group();
+
+const sgBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.023, 0.46, 14), shotgunSkinMat);
+sgBarrel.rotation.x = Math.PI / 2;
+sgBarrel.position.set(0, 0.036, -0.44);
+
+const sgMuzzleLime = new THREE.Mesh(new THREE.CylinderGeometry(0.0225, 0.0225, 0.045, 14), limeTrimMat);
+sgMuzzleLime.rotation.x = Math.PI / 2;
+sgMuzzleLime.position.set(0, 0.036, -0.66);
+
+const sgTubeMag = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.019, 0.42, 12), gunAlloy);
+sgTubeMag.rotation.x = Math.PI / 2;
+sgTubeMag.position.set(0, 0.004, -0.42);
+
+const sgPumpForend = new THREE.Mesh(new THREE.BoxGeometry(0.098, 0.076, 0.25), shotgunSkinMat);
+sgPumpForend.position.set(0, -0.012, -0.34);
+
+const sgPumpLimeStripe = new THREE.Mesh(new THREE.BoxGeometry(0.102, 0.014, 0.22), limeTrimMat);
+sgPumpLimeStripe.position.set(0, 0.016, -0.34);
+
+const sgReceiver = new THREE.Mesh(new THREE.BoxGeometry(0.108, 0.122, 0.34), shotgunSkinMat);
+sgReceiver.position.set(0, 0.012, -0.05);
+
+const sgTopLimeBar = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.012, 0.24), limeTrimMat);
+sgTopLimeBar.position.set(0, 0.076, -0.06);
+
+const sgStockBody = new THREE.Mesh(new THREE.BoxGeometry(0.078, 0.115, 0.32), shotgunSkinMat);
+sgStockBody.position.set(0, -0.032, 0.25);
+sgStockBody.rotation.x = -0.18;
+
+const sgStockPad = new THREE.Mesh(new THREE.BoxGeometry(0.082, 0.125, 0.028), buttPadMat);
+sgStockPad.position.set(0, -0.055, 0.40);
+sgStockPad.rotation.x = -0.25;
+
+const sgStockLimeTrim = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.012, 0.14), limeTrimMat);
+sgStockLimeTrim.position.set(0, -0.085, 0.35);
+sgStockLimeTrim.rotation.x = -0.22;
+
+shotgunModelGroup.add(
+  sgBarrel, sgMuzzleLime, sgTubeMag, sgPumpForend, sgPumpLimeStripe,
+  sgReceiver, sgTopLimeBar, sgStockBody, sgStockPad, sgStockLimeTrim
+);
+
+// ------------------------------------------------------------
+// C. [3] 电磁狙击步枪专属建模（霓虹蓝电路全息镜 + 骨架狙击托）
+// ------------------------------------------------------------
+const sniperModelGroup = new THREE.Group();
+
 const barrelGroup = new THREE.Group();
-const mainBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.44, 12), gunAlloy);
+const handguardTop = new THREE.Mesh(new THREE.BoxGeometry(0.098, 0.026, 0.34), gunAlloy);
+handguardTop.position.set(0, 0.056, -0.34);
+
+const handguardBot = new THREE.Mesh(new THREE.BoxGeometry(0.092, 0.024, 0.32), gunAccentMat);
+handguardBot.position.set(0, -0.032, -0.34);
+
+const handguardSideL = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.068, 0.32), gunCarbon);
+handguardSideL.position.set(-0.042, 0.012, -0.34);
+
+const handguardSideR = handguardSideL.clone();
+handguardSideR.position.x = 0.042;
+
+const handguardCircuitL = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.011, 0.28), gunNeonMat);
+handguardCircuitL.position.set(-0.043, 0.016, -0.35);
+
+const handguardCircuitR = handguardCircuitL.clone();
+handguardCircuitR.position.x = 0.043;
+
+const mainBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.023, 0.52, 14), gunAlloy);
 mainBarrel.rotation.x = Math.PI / 2;
-mainBarrel.position.set(0, 0.025, -0.44);
-const shroud = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.1, 0.32), gunAlloy);
-shroud.position.set(0, 0.01, -0.28);
-barrelGroup.add(mainBarrel, shroud);
+mainBarrel.position.set(0, 0.022, -0.58);
 
-// 导能发光条
-const energyRail = new THREE.Mesh(new THREE.BoxGeometry(0.116, 0.02, 0.42), gunNeonMat);
-energyRail.position.set(0, 0.035, -0.14);
+const energyBarrelCore = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.46, 12), gunNeonMat);
+energyBarrelCore.rotation.x = Math.PI / 2;
+energyBarrelCore.position.set(0, 0.022, -0.56);
 
-// 弹匣与握把
-const mag = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.22, 0.11), gunAlloy);
-mag.position.set(0, -0.15, -0.05);
-mag.rotation.x = -0.2;
+const muzzleBrake = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.026, 0.11, 12), gunAccentMat);
+muzzleBrake.rotation.x = Math.PI / 2;
+muzzleBrake.position.set(0, 0.022, -0.87);
 
-const grip = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.16, 0.09), gunCarbon);
-grip.position.set(0, -0.13, 0.16);
-grip.rotation.x = 0.28;
+const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.027, 0.004, 8, 20), gunGlowCoreMat);
+muzzleRing.position.set(0, 0.022, -0.825);
 
-// 开放式全息瞄准框（仅侧边框+底部底座，顶部与视野中心完全通透不遮挡敌人）
-const sightBase = new THREE.Mesh(new THREE.BoxGeometry(0.082, 0.018, 0.09), gunAlloy);
-sightBase.position.set(0, 0.082, 0.02);
-const sightLeft = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.055, 0.08), gunAlloy);
-sightLeft.position.set(-0.037, 0.112, 0.02);
-const sightRight = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.055, 0.08), gunAlloy);
-sightRight.position.set(0.037, 0.112, 0.02);
-const holoDot3D = new THREE.Mesh(new THREE.SphereGeometry(0.005, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2d55 }));
-holoDot3D.position.set(0, 0.112, 0.01);
+const bipodMount = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.022, 0.05), gunAlloy);
+bipodMount.position.set(0, -0.052, -0.44);
+
+const bipodLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.006, 0.16, 8), gunCarbon);
+bipodLegL.position.set(-0.045, -0.11, -0.46);
+bipodLegL.rotation.z = -0.42;
+bipodLegL.rotation.x = 0.25;
+
+const bipodLegR = bipodLegL.clone();
+bipodLegR.position.x = 0.045;
+bipodLegR.rotation.z = 0.42;
+
+barrelGroup.add(
+  handguardTop, handguardBot, handguardSideL, handguardSideR,
+  handguardCircuitL, handguardCircuitR, mainBarrel, energyBarrelCore,
+  muzzleBrake, muzzleRing, bipodMount, bipodLegL, bipodLegR
+);
+
+const circuitStripe1 = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.01, 0.34), gunNeonMat);
+circuitStripe1.position.set(0, 0.036, -0.05);
+
+const circuitStripe2 = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.008, 0.18), gunGlowCoreMat);
+circuitStripe2.position.set(0, 0.012, 0.02);
+
+const scopeMount = new THREE.Mesh(new THREE.BoxGeometry(0.064, 0.026, 0.14), gunAlloy);
+scopeMount.position.set(0, 0.098, -0.05);
+
+const scopeTube = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.24, 16), gunCarbon);
+scopeTube.rotation.x = Math.PI / 2;
+scopeTube.position.set(0, 0.128, -0.05);
+
+const scopeRingAccent = new THREE.Mesh(new THREE.TorusGeometry(0.031, 0.0035, 8, 20), gunNeonMat);
+scopeRingAccent.position.set(0, 0.128, 0.055);
+
+const holoScreenFrame = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.072, 0.12), gunGlowCoreMat);
+holoScreenFrame.position.set(0.068, 0.155, -0.06);
+holoScreenFrame.rotation.y = -0.22;
+
+const holoScreenGlass = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.11, 0.064),
+  new THREE.MeshBasicMaterial({
+    color: 0x00e5ff, transparent: true, opacity: 0.22,
+    side: THREE.DoubleSide, depthWrite: false
+  })
+);
+holoScreenGlass.position.set(0.066, 0.155, -0.06);
+holoScreenGlass.rotation.y = Math.PI / 2 - 0.22;
+
+const mag = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.19, 0.115), gunAlloy);
+mag.position.set(0, -0.135, -0.11);
+mag.rotation.x = -0.22;
+
+const magLed1 = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.012, 0.045), gunGlowCoreMat);
+magLed1.position.set(0, -0.095, -0.12);
+magLed1.rotation.x = -0.22;
+
+const magLed2 = magLed1.clone();
+magLed2.position.y = -0.125;
+magLed2.position.z = -0.113;
+
+const magLed3 = magLed1.clone();
+magLed3.position.y = -0.155;
+magLed3.position.z = -0.106;
+
+const grip = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.15, 0.085), gunCarbon);
+grip.position.set(0, -0.125, 0.11);
+grip.rotation.x = 0.26;
+
+const gripTrim = new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.12, 0.012), gunNeonMat);
+gripTrim.position.set(0, -0.12, 0.148);
+gripTrim.rotation.x = 0.26;
+
+const stockUpper = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.026, 0.28), gunCarbon);
+stockUpper.position.set(0, 0.015, 0.30);
+
+const cheekRest = new THREE.Mesh(new THREE.BoxGeometry(0.076, 0.022, 0.14), gunAlloy);
+cheekRest.position.set(0, 0.044, 0.27);
+
+const stockLower = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.022, 0.25), gunAlloy);
+stockLower.position.set(0, -0.115, 0.29);
+stockLower.rotation.x = -0.14;
+
+const stockStrut = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.13, 0.024), gunCarbon);
+stockStrut.position.set(0, -0.05, 0.41);
+stockStrut.rotation.x = -0.22;
+
+const buttplate = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.155, 0.024), gunAccentMat);
+buttplate.position.set(0, -0.05, 0.43);
+
+const buttNeon = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.14, 0.008), gunNeonMat);
+buttNeon.position.set(0, -0.05, 0.442);
+
+sniperModelGroup.add(
+  barrelGroup, circuitStripe1, circuitStripe2,
+  scopeMount, scopeTube, scopeRingAccent, holoScreenFrame, holoScreenGlass,
+  mag, magLed1, magLed2, magLed3,
+  grip, gripTrim,
+  stockUpper, cheekRest, stockLower, stockStrut, buttplate, buttNeon
+);
 
 // 枪口焰
 const muzzle = new THREE.Mesh(
-  new THREE.PlaneGeometry(0.3, 0.3),
-  new THREE.MeshBasicMaterial({ color: 0x99f3ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
+  new THREE.PlaneGeometry(0.34, 0.34),
+  new THREE.MeshBasicMaterial({
+    color: 0x7df9ff, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+  })
 );
-muzzle.position.set(0, 0.025, -0.68);
+muzzle.position.set(0, 0.036, -0.78);
 
-gun.add(receiver, barrelGroup, energyRail, mag, grip, sightBase, sightLeft, sightRight, holoDot3D, muzzle);
-gun.position.set(0.26, -0.22, -0.48);
+gun.add(receiver, topRail, rifleModelGroup, shotgunModelGroup, sniperModelGroup, muzzle);
+
+function applyWeaponVisualModel(idx) {
+  rifleModelGroup.visible = idx === 0;
+  shotgunModelGroup.visible = idx === 1;
+  sniperModelGroup.visible = idx === 2;
+
+  if (idx === 0) {
+    receiver.visible = false;
+    topRail.visible = false;
+    muzzle.position.set(0, 0.036, -0.78);
+  } else if (idx === 1) {
+    receiver.visible = false;
+    topRail.visible = false;
+    muzzle.position.set(0, 0.036, -0.71);
+  } else {
+    receiver.visible = true;
+    receiver.material = gunCarbon;
+    topRail.visible = true;
+    muzzle.position.set(0, 0.022, -0.94);
+  }
+}
+applyWeaponVisualModel(0);
+
+gun.position.set(0.26, -0.21, -0.42);
 weaponPivot.add(gun);
 camera.add(weaponPivot);
 scene.add(camera);
@@ -772,16 +1204,16 @@ const audio = {
   reload() {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    [0, 0.22, 0.95].forEach((dt, i) => {
-      const o = this.ctx.createOscillator(); o.type = 'square'; o.frequency.value = i === 2 ? 720 : 340;
-      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.08, t + dt); g.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.06);
-      o.connect(g); g.connect(this.ctx.destination); o.start(t + dt); o.stop(t + dt + 0.06);
+    [0, 0.28, 0.95].forEach((dt, i) => {
+      const o = this.ctx.createOscillator(); o.type = 'square'; o.frequency.value = i === 2 ? 780 : (i === 1 ? 260 : 420);
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.09, t + dt); g.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.065);
+      o.connect(g); g.connect(this.ctx.destination); o.start(t + dt); o.stop(t + dt + 0.065);
     });
   }
 };
 
 /* ============================================================
-   6. 优化后的多关节敌人建模 + 随波次/关卡变化的专属敌军建模
+   6. 多关节敌军建模（随波次/关卡阶段进化）
 ============================================================ */
 const enemies = [];
 const enemyBullets = [];
@@ -793,15 +1225,9 @@ const bulletGeo = new THREE.SphereGeometry(0.11, 8, 8);
 const bulletMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
 const particleGeo = new THREE.BoxGeometry(0.07, 0.07, 0.07);
 
-/**
- * 根据当前波次（关卡阶段）与兵种构建具有明显差异化外观的 3A 机甲/生化敌军建模：
- * - 第 1 关/波次（PHASE I）：赛博突击步兵（肩甲、独立手臂、发光目镜）
- * - 第 2 关/波次（PHASE II）：等离子侦察机甲（双推进翼、狙击传感器、悬浮核心）
- * - 第 3 关及以上（PHASE III+）：重装泰坦/毁灭者（厚重双肩炮、巨型胸甲、核心反应堆）
- */
 function buildEnemyModel(waveNum, type) {
   const g = new THREE.Group();
-  const stage = ((waveNum - 1) % 3); // 0: 突击阶段, 1: 机甲侦察阶段, 2: 重装泰坦阶段
+  const stage = ((waveNum - 1) % 3);
 
   let armorColor = 0x3a4968;
   let emissiveColor = 0xff1744;
@@ -839,7 +1265,6 @@ function buildEnemyModel(waveNum, type) {
     emissive: emissiveColor, emissiveIntensity: 0.35
   });
 
-  // 躯干与胸甲
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.92, 0.44), armorMat);
   torso.position.y = 1.12;
   torso.castShadow = true;
@@ -851,7 +1276,6 @@ function buildEnemyModel(waveNum, type) {
   chestPlate.userData = { part: 'body' };
   g.add(chestPlate);
 
-  // 头部与面罩（爆头判定目标）
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.4), headMat);
   head.position.y = 1.8;
   head.castShadow = true;
@@ -866,7 +1290,6 @@ function buildEnemyModel(waveNum, type) {
   visor.userData = { part: 'head' };
   g.add(visor);
 
-  // 独立左右手臂与肩甲
   const armL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.72, 0.22), jointMat);
   armL.position.set(-0.5, 1.12, 0.08);
   armL.rotation.x = -0.35;
@@ -878,9 +1301,7 @@ function buildEnemyModel(waveNum, type) {
   armR.userData = { part: 'body' };
   g.add(armL, armR);
 
-  // 关卡专属特征部件
   if (stage === 0) {
-    // 突击兵团：流线型肩甲
     const pauldronL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.34), armorMat);
     pauldronL.position.set(-0.5, 1.48, 0);
     pauldronL.userData = { part: 'body' };
@@ -888,7 +1309,6 @@ function buildEnemyModel(waveNum, type) {
     pauldronR.position.x = 0.5;
     g.add(pauldronL, pauldronR);
   } else if (stage === 1) {
-    // 机甲侦察阶段：双背翼推进器与头顶传感器天线
     const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.12, 0.14), armorMat);
     wingL.position.set(-0.52, 1.45, -0.26);
     wingL.rotation.z = 0.35;
@@ -900,7 +1320,6 @@ function buildEnemyModel(waveNum, type) {
     fin.position.set(0, 2.08, -0.02);
     g.add(wingL, wingR, fin);
   } else {
-    // 重装泰坦阶段：双肩重炮与发光核心
     const podL = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.52), jointMat);
     podL.position.set(-0.56, 1.56, 0.04);
     podL.userData = { part: 'body' };
@@ -911,7 +1330,6 @@ function buildEnemyModel(waveNum, type) {
     g.add(podL, podR, core);
   }
 
-  // 左右腿部
   const legL = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.68, 0.26), jointMat);
   legL.position.set(-0.2, 0.34, 0);
   legL.castShadow = true;
@@ -923,7 +1341,6 @@ function buildEnemyModel(waveNum, type) {
   legR.userData = { part: 'body' };
   g.add(legL, legR);
 
-  // 头顶悬浮血条
   const hpBg = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.09), new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }));
   hpBg.position.y = 2.28;
   const hpFill = new THREE.Mesh(new THREE.PlaneGeometry(0.91, 0.06), new THREE.MeshBasicMaterial({ color: emissiveColor, side: THREE.DoubleSide }));
@@ -1073,6 +1490,7 @@ function shoot() {
   state.lastShot = now;
   state.ammo[state.weaponIdx]--;
   state.gunKick = 1;
+  state.boltKick = 1;
   state.recoilPitch += w.recoil * (state.ads ? 0.6 : 1);
   state.recoilYaw += (Math.random() - 0.5) * w.recoil * 0.45;
   state.shake = Math.max(state.shake, w.recoil * 1.3);
@@ -1216,8 +1634,8 @@ function switchWeapon(idx) {
   state.reloading = false;
   const w = WEAPONS[idx];
   gunNeonMat.color.setHex(w.color);
-  // 切换枪管长度以体现不同武器建模
-  mainBarrel.scale.z = idx === 2 ? 1.35 : (idx === 1 ? 0.82 : 1.0);
+  gunGlowCoreMat.color.setHex(w.tracerColor);
+  applyWeaponVisualModel(idx);
   document.getElementById('weapon-name').textContent = w.name;
   document.getElementById('weapon-mode').textContent = w.mode;
   [0, 1, 2].forEach(i => document.getElementById('slot-' + (i + 1)).classList.toggle('active', i === idx));
@@ -1228,6 +1646,7 @@ function startReload() {
   const w = WEAPONS[state.weaponIdx];
   if (state.reloading || state.ammo[state.weaponIdx] === w.magSize) return;
   state.reloading = true;
+  state.reloadDuration = w.reloadTime;
   state.reloadTimer = w.reloadTime;
   audio.reload();
   updateHUD();
@@ -1436,7 +1855,7 @@ function endGame() {
 }
 
 /* ============================================================
-   11. 玩家、瞄准镜、敌军与主循环更新
+   11. 玩家、瞄准镜、枪机与换弹夹动画、敌军与主循环更新
 ============================================================ */
 function updatePlayer(rawDt) {
   if (state.bulletTime) {
@@ -1500,11 +1919,11 @@ function updatePlayer(rawDt) {
   state.recoilPitch = Math.max(0, state.recoilPitch - rawDt * 0.14);
   state.recoilYaw *= Math.pow(0.05, rawDt);
   state.gunKick = Math.max(0, state.gunKick - rawDt * 8);
+  state.boltKick = Math.max(0, state.boltKick - rawDt * 13);
 
   camera.rotation.y = player.yaw + state.recoilYaw;
   camera.rotation.x = player.pitch + state.recoilPitch;
 
-  // ADS 瞄准镜过渡 + FOV 变焦
   const adsActive = state.ads && !state.reloading;
   state.adsLerp += ((adsActive ? 1 : 0) - state.adsLerp) * Math.min(1, rawDt * 16);
 
@@ -1513,7 +1932,6 @@ function updatePlayer(rawDt) {
   camera.fov += (targetFov - camera.fov) * Math.min(1, rawDt * 16);
   camera.updateProjectionMatrix();
 
-  // 切换全息镜 / 高倍狙击镜显示
   const opticOverlay = document.getElementById('optic-overlay');
   const holoOptic = document.getElementById('holo-optic');
   const sniperOptic = document.getElementById('sniper-optic');
@@ -1522,7 +1940,7 @@ function updatePlayer(rawDt) {
   if (state.weaponIdx === 2) {
     holoOptic.style.display = 'none';
     sniperOptic.classList.toggle('active', state.adsLerp > 0.35);
-    gun.visible = state.adsLerp < 0.72; // 狙击开镜时隐藏枪身遮挡，保留高倍瞄准视野
+    gun.visible = state.adsLerp < 0.72;
   } else {
     sniperOptic.classList.remove('active');
     holoOptic.style.display = 'block';
@@ -1531,23 +1949,60 @@ function updatePlayer(rawDt) {
 
   document.getElementById('crosshair').classList.toggle('ads', state.adsLerp > 0.5);
 
-  // 腰射与机瞄位置插值（确保机瞄时镜框不会挡住屏幕中心敌人）
-  gun.position.x = THREE.MathUtils.lerp(0.26, 0, state.adsLerp);
-  gun.position.y = THREE.MathUtils.lerp(-0.22, -0.155, state.adsLerp) + Math.sin(state.bobTime * 1.5) * 0.008 * (1 - state.adsLerp);
-  gun.position.z = THREE.MathUtils.lerp(-0.48, -0.42, state.adsLerp) + state.gunKick * 0.07;
-  gun.rotation.x = state.gunKick * 0.11;
-  gun.rotation.z = player.sliding ? 0.25 : 0;
+  // 步枪枪机往复移动（射击时向后抽动并快速复位）
+  const boltTravel = Math.sin(state.boltKick * Math.PI) * 0.085;
+  boltAssembly.position.z = boltTravel;
+  boltGlowStrip.material.color.setHex(state.boltKick > 0.25 ? 0xff2d8f : 0x00f5ff);
 
+  // 脉冲步枪换弹夹动画（抽出 -> 倾斜掉落 -> 新弹匣插入复位）
+  if (state.weaponIdx === 0 && state.reloading) {
+    const progress = 1 - Math.max(0, state.reloadTimer / Math.max(0.01, state.reloadDuration));
+    if (progress < 0.42) {
+      const p = progress / 0.42;
+      rifleMagGroup.position.set(0.02 * p, -0.05 - 0.14 * p, 0.06 + 0.03 * p);
+      rifleMagGroup.rotation.set(0.35 * p, 0, -0.25 * p);
+    } else if (progress < 0.55) {
+      rifleMagGroup.position.set(0.04, -0.28, 0.11);
+      rifleMagGroup.rotation.set(0.55, 0, -0.4);
+    } else {
+      const p = (progress - 0.55) / 0.45;
+      const ease = 1 - Math.pow(1 - p, 2);
+      rifleMagGroup.position.set(0.02 * (1 - ease), -0.05 - 0.12 * (1 - ease), 0.06);
+      rifleMagGroup.rotation.set(0.2 * (1 - ease), 0, -0.15 * (1 - ease));
+    }
+  } else {
+    rifleMagGroup.position.set(0, -0.05, 0.06);
+    rifleMagGroup.rotation.set(0, 0, 0);
+  }
+
+  // 霰弹枪换弹时推拉前护木动效
+  if (state.weaponIdx === 1 && state.reloading) {
+    sgPumpForend.position.z = -0.34 + Math.sin(state.reloadTimer * 18) * 0.06;
+    sgPumpLimeStripe.position.z = sgPumpForend.position.z;
+  } else {
+    sgPumpForend.position.z = -0.34;
+    sgPumpLimeStripe.position.z = -0.34;
+  }
+
+  let reloadGunTiltX = 0;
+  let reloadGunRollZ = 0;
   if (state.reloading) {
     state.reloadTimer -= rawDt;
     gun.visible = true;
-    gun.rotation.x = -0.45 + Math.sin(state.reloadTimer * 16) * 0.05;
+    reloadGunTiltX = -0.36 + Math.sin(state.reloadTimer * 12) * 0.04;
+    reloadGunRollZ = state.weaponIdx === 0 ? -0.18 : 0;
     if (state.reloadTimer <= 0) {
       state.reloading = false;
       state.ammo[state.weaponIdx] = WEAPONS[state.weaponIdx].magSize;
       updateHUD();
     }
   }
+
+  gun.position.x = THREE.MathUtils.lerp(0.26, 0.04, state.adsLerp);
+  gun.position.y = THREE.MathUtils.lerp(-0.21, -0.175, state.adsLerp) + Math.sin(state.bobTime * 1.5) * 0.008 * (1 - state.adsLerp);
+  gun.position.z = THREE.MathUtils.lerp(-0.42, -0.38, state.adsLerp) + state.gunKick * 0.07;
+  gun.rotation.x = state.gunKick * 0.11 + reloadGunTiltX;
+  gun.rotation.z = (player.sliding ? 0.25 : 0) + reloadGunRollZ;
 
   muzzle.material.opacity = Math.max(0, muzzle.material.opacity - rawDt * 16);
 
