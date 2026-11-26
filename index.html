@@ -1863,7 +1863,7 @@ camera.add(weaponPivot);
 scene.add(camera);
 
 /* ============================================================
-   5. 音效引擎 + 严禁多音乐并发调度器（默认子弹时间 + 100BPM 起步随时间/关卡加速）
+   5. 音效引擎 + 严禁多音乐并发调度器（暂停时音乐采用 13.0 风格）
 ============================================================ */
 const audio = {
   ctx: null,
@@ -1875,16 +1875,14 @@ const audio = {
   lastTickMs: 0,
   step: 0,
   currentMode: 'bullet_time',
-  activeVoices: new Map(), // 声部并发上限追踪，防止音轨堆叠嘈杂
+  activeVoices: new Map(),
 
-  // 连续插值状态
   smoothBpm: 100,
   smoothCutoff: 740,
   smoothQ: 4.1,
   smoothVol: 0.16,
   smoothWet: 0.34,
 
-  // D小调 / 弗里吉亚暗黑赛博和声进行
   chords: [
     { root: 73.42,  notes: [146.83, 174.61, 220.00, 261.63] },
     { root: 65.41,  notes: [130.81, 164.81, 196.00, 261.63] },
@@ -1916,7 +1914,6 @@ const audio = {
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
-    // 严格单例启动：先停止已有调度器，再启动唯一主循环
     this.stopBGM();
     this.startBGM();
   },
@@ -1929,7 +1926,6 @@ const audio = {
     }
   },
 
-  // 声部并发控制：同一声部同时发声超过上限时停止最早节点，避免多音轨叠加嘈杂
   trackVoice(channel, nodes, maxVoices, stopAtSec) {
     if (!this.activeVoices.has(channel)) {
       this.activeVoices.set(channel, []);
@@ -1998,14 +1994,12 @@ const audio = {
     this.master.connect(this.ctx.destination);
   },
 
-  // 计算随时间与关卡递增的基准 BPM（从 100 起步）
   computeProgressionBpm() {
     const waveBonus = Math.max(0, (state.wave - 1)) * 4.5;
     const timeBonus = (state.runElapsedSec / 60) * 2.5;
     return Math.min(168, 100 + waveBonus + timeBonus);
   },
 
-  // 游戏背景音乐默认设为子弹时间（bullet_time），仅在暂停/阵亡时降级
   evaluateTargetMode() {
     if (!state.started || state.paused) return 'standby';
     if (state.gameOver) return 'gameover';
@@ -2023,7 +2017,7 @@ const audio = {
     }
     const bpmText = Math.round(this.smoothBpm);
     if (mode === 'standby') {
-      badge.textContent = `SYNTH BGM // STANDBY ${bpmText}BPM [M]`;
+      badge.textContent = `SYNTH BGM // PAUSED ${bpmText}BPM [M]`;
     } else if (mode === 'gameover') {
       badge.textContent = `SYNTH BGM // FADE ${bpmText}BPM [M]`;
     } else {
@@ -2033,7 +2027,7 @@ const audio = {
     }
   },
 
-  // 每帧更新连续插值参数，实现丝滑过渡
+  // 每帧更新连续插值参数；暂停（standby）采用 13.0 中的低频深沉待机参数[cite: 21]
   updateSmoothTransition(rawDt) {
     const targetMode = this.evaluateTargetMode();
     if (targetMode !== this.currentMode) {
@@ -2050,17 +2044,17 @@ const audio = {
     let targetWet = state.bulletTime ? 0.42 : 0.34;
 
     if (targetMode === 'standby') {
-      targetBpm = Math.max(96, progBpm * 0.92);
+      targetBpm = 120;
       targetCutoff = 520;
       targetQ = 3.2;
-      targetVol = 0.09;
-      targetWet = 0.36;
+      targetVol = 0.075;
+      targetWet = 0.24;
     } else if (targetMode === 'gameover') {
       targetBpm = 90;
       targetCutoff = 420;
       targetQ = 2.2;
-      targetVol = 0.04;
-      targetWet = 0.38;
+      targetVol = 0.035;
+      targetWet = 0.32;
     }
 
     const rate = Math.min(1, rawDt * 3.0);
@@ -2146,7 +2140,7 @@ const audio = {
     src.start(t);
   },
 
-  playCyberBass(t, freq, dur) {
+  playCyberBass(t, freq, dur, vol = 0.24) {
     const saw = this.ctx.createOscillator();
     saw.type = 'sawtooth';
     saw.frequency.setValueAtTime(freq, t);
@@ -2158,7 +2152,7 @@ const audio = {
     f.Q.value = 3.8;
 
     const outGain = this.ctx.createGain();
-    outGain.gain.setValueAtTime(0.24, t);
+    outGain.gain.setValueAtTime(vol, t);
     outGain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.98);
 
     saw.connect(f);
@@ -2231,7 +2225,7 @@ const audio = {
       const effectiveBpm = Math.max(70, this.smoothBpm);
       const stepDur = 60 / effectiveBpm / 4;
 
-      if (!state.bgmMuted && this.smoothVol > 0.002 && this.ctx.state === 'running' && mode !== 'standby') {
+      if (!state.bgmMuted && this.smoothVol > 0.002 && this.ctx.state === 'running') {
         const t = this.ctx.currentTime + 0.025;
         const s = this.step;
         const barIdx = Math.floor(s / 16) % this.chords.length;
@@ -2242,22 +2236,31 @@ const audio = {
           this.playPad(t, chord.notes, stepDur * 16);
         }
 
-        if (mode !== 'gameover') {
+        if (mode === 'standby') {
+          // 13.0 非战斗/暂停逻辑：仅每 4 拍触发低八度贝斯，无鼓组与高频琶音[cite: 21]
+          if (stepInBar % 4 === 0) {
+            this.playCyberBass(t, chord.root * 0.5, stepDur * 3, 0.16);
+          }
+        } else if (mode === 'gameover') {
+          if (this.bassPattern[stepInBar]) {
+            const bassFreq = (stepInBar === 14 || stepInBar === 15) ? chord.root * 1.5 : chord.root;
+            this.playCyberBass(t, bassFreq * 0.5, stepDur * 1.5, 0.18);
+          }
+        } else {
           if (stepInBar % 4 === 0) this.playKick(t);
           if (stepInBar % 8 === 4) this.playSnare(t);
           if (stepInBar % 4 === 2) this.playHat(t, stepInBar === 14);
-        }
 
-        if (this.bassPattern[stepInBar]) {
-          const bassFreq = (stepInBar === 14 || stepInBar === 15) ? chord.root * 1.5 : chord.root;
-          const bFreq = mode === 'gameover' ? bassFreq * 0.5 : bassFreq;
-          this.playCyberBass(t, bFreq, stepDur * 1.5);
-        }
+          if (this.bassPattern[stepInBar]) {
+            const bassFreq = (stepInBar === 14 || stepInBar === 15) ? chord.root * 1.5 : chord.root;
+            this.playCyberBass(t, bassFreq, stepDur * 1.5, 0.24);
+          }
 
-        const leadFreq = this.arpLeadPattern[(barIdx * 8 + (stepInBar % 8)) % this.arpLeadPattern.length];
-        const subFreq = this.arpCounterPattern[(barIdx * 8 + (stepInBar % 8)) % this.arpCounterPattern.length];
-        if (mode === 'bullet_time' && stepInBar % 2 === 0) {
-          this.playStereoArp(t, leadFreq, subFreq, stepDur * 1.4);
+          const leadFreq = this.arpLeadPattern[(barIdx * 8 + (stepInBar % 8)) % this.arpLeadPattern.length];
+          const subFreq = this.arpCounterPattern[(barIdx * 8 + (stepInBar % 8)) % this.arpCounterPattern.length];
+          if (mode === 'bullet_time' && stepInBar % 2 === 0) {
+            this.playStereoArp(t, leadFreq, subFreq, stepDur * 1.4);
+          }
         }
 
         this.step = (this.step + 1) % 64;
