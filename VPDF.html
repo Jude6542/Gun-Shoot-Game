@@ -3,131 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF 原生文本编辑、拖拽、等比例印章与样式调整工具</title>
+    <title>V Love PDF - 专业在线编辑器</title>
+    <!-- 引入稳定版 CDN 资源 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f4f4f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
+
+        /* 顶部现代化工具栏 */
         .toolbar {
-            background-color: #1e1e24;
-            color: #fff;
-            padding: 10px 20px;
+            background-color: #18181b;
+            color: #f8fafc;
+            padding: 10px 24px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            z-index: 10;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
             flex-wrap: wrap;
         }
+
         .btn {
-            background-color: #007acc;
+            background-color: #0284c7;
             color: white;
-            padding: 7px 14px;
+            padding: 7px 13px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
-            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            white-space: nowrap;
         }
-        .btn:hover { background-color: #005999; }
-        .btn-success { background-color: #28a745; }
-        .btn-success:hover { background-color: #218838; }
-        .btn-warning { background-color: #e67e22; }
-        .btn-warning:hover { background-color: #cf6d17; }
-        .btn:disabled { background-color: #555; color: #888; cursor: not-allowed; }
+        .btn:hover { background-color: #0369a1; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
         
+        .btn-success { background-color: #16a34a; }
+        .btn-success:hover { background-color: #15803d; }
+        
+        .btn-warning { background-color: #d97706; }
+        .btn-warning:hover { background-color: #b45309; }
+
+        .btn-secondary { background-color: #4f46e5; }
+        .btn-secondary:hover { background-color: #4338ca; }
+
+        /* 格式刷按钮样式 */
+        .btn-painter {
+            background-color: #3f3f46;
+            border: 1px solid #52525b;
+            color: #f4f4f5;
+        }
+        .btn-painter:hover:not(:disabled) {
+            background-color: #52525b;
+        }
+        .btn-painter.active {
+            background-color: #ea580c;
+            border-color: #fb923c;
+            color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.4);
+        }
+
+        /* 缩放微按钮 */
+        .btn-zoom {
+            background-color: #27272a;
+            border: 1px solid #3f3f46;
+            color: #f8fafc;
+            padding: 4px 9px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+        .btn-zoom:hover:not(:disabled) {
+            background-color: #3f3f46;
+        }
+        .btn-zoom:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .zoom-label {
+            min-width: 46px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #f8fafc;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .btn:disabled { background-color: #27272a; border-color: transparent; color: #71717a; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        /* 工具分组区块 */
         .tool-group {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             padding: 4px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            color: #cbd5e1;
         }
 
+        .tool-group input[type="number"], .tool-group select {
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: white;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+        .tool-group input[type="number"] { width: 58px; text-align: center; }
+        .tool-group select { cursor: pointer; }
+        .tool-group input[type="number"]:focus, .tool-group select:focus { border-color: #0284c7; }
+
+        .tool-group input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+        .tool-group input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        .tool-group input[type="color"]::-webkit-color-swatch { border: 1px solid #52525b; border-radius: 4px; }
+
+        /* 右上角区域：品牌标题 + 状态提示 */
+        .toolbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .brand-title {
+            color: #ffffff;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        /* 主画布容器 */
         .main-container {
             flex: 1;
             overflow: auto;
-            padding: 30px;
+            padding: 40px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             position: relative;
+            user-select: none;
         }
         
-        /* 拖拽上传覆盖层提示 */
+        /* 拖拽上传覆盖层 */
         .drop-zone-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 122, 204, 0.85);
+            background: rgba(2, 132, 199, 0.9);
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 24px;
-            font-weight: bold;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
             z-index: 1000;
             display: none;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* 引导占位符样式 */
+        .placeholder-card {
+            background: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 60px 80px;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            margin-top: 60px;
+            transition: all 0.2s;
+        }
+        .placeholder-card:hover { border-color: #0284c7; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08); }
+
+        /* 缩放外部占位容器，确保放大后滚动条正常撑开 */
+        .zoom-stage {
+            position: relative;
+            display: none;
+            flex-shrink: 0;
         }
 
         .pdf-wrapper {
             position: relative;
             background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            min-width: 300px;
-            min-height: 400px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            transform-origin: left top;
+        }
+        /* 格式刷激活时的画布指针提示 */
+        .pdf-wrapper.painter-mode .native-text-box {
+            cursor: cell !important;
+        }
+        .pdf-wrapper.painter-mode .native-text-box:hover {
+            border-color: #ea580c !important;
+        }
+
+        canvas { display: block; border-radius: 4px; }
+
+        /* 极细的绿色对齐辅助线样式 */
+        .alignment-guide-v {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 0.5px;
+            background-color: #22c55e;
+            z-index: 9999;
+            pointer-events: none;
             display: none;
         }
-        canvas { display: block; }
+        .alignment-guide-h {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0.5px;
+            background-color: #22c55e;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+        }
 
-        /* 未编辑前文字保持透明，只看底层高精度 Canvas，彻底消除任何重叠阴影 */
+        /* 框选矩形样式 */
+        .selection-box {
+            position: absolute;
+            border: 1px dashed #0284c7;
+            background-color: rgba(2, 132, 199, 0.08);
+            z-index: 999;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* 双层文本框容器：第一层为纯色底色矩形，第二层为上方无底色可见文字 */
         .native-text-box {
             position: absolute;
             background-color: transparent;
-            border: 1px dashed transparent;
+            border: 1px dashed #38bdf8;
             outline: none;
-            color: transparent; 
-            padding: 0px 2px;
-            line-height: 1.1;
+            padding: 0px;
+            line-height: 1.15;
             z-index: 20;
-            white-space: pre;
             transform-origin: left top;
-            cursor: move;
-            user-select: none;
+            cursor: grab;
+            border-radius: 1px;
+            display: block;
+        }
+
+        /* 第一层：内部空间纯色底色矩形层（位于文字下方） */
+        .text-bg-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .text-bg-rect {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* 第二层：位于纯色填充层上方的无底色文本层（始终正常可见） */
+        .text-content-layer {
+            position: relative;
+            z-index: 2;
+            background-color: transparent !important;
+            color: var(--text-color, #000000);
+            white-space: pre;
+            outline: none;
+            min-width: 100%;
+            min-height: 100%;
+        }
+
+        .native-text-box.dragging {
+            cursor: grabbing !important;
+            z-index: 200 !important;
+        }
+        .native-text-box.text-selecting-mode .text-content-layer {
+            cursor: text !important;
+            user-select: text !important;
         }
 
         .native-text-box:hover {
-            border-color: #3b82f6;
-            background-color: rgba(59, 130, 246, 0.05);
+            border-color: #0284c7;
         }
 
-        /* 激活编辑状态：背景变白遮盖原图，文字显式赋予原色(默认黑色)，绝不会白底白字看不见 */
-        .native-text-box:focus,
-        .native-text-box.is-editing {
+        .native-text-box.selected {
+            border: 1px solid #0284c7 !important;
+        }
+
+        /* 只有真正处于唯一选中状态(.selected)时才显示四周8个小方格 */
+        .resize-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffffff;
+            border: 1px solid #0284c7;
+            display: none;
+            z-index: 30;
+            pointer-events: none;
+        }
+        .native-text-box.selected .resize-dot {
+            display: block;
+        }
+        .dot-nw { top: -4px; left: -4px; }
+        .dot-n  { top: -4px; left: calc(50% - 3px); }
+        .dot-ne { top: -4px; right: -4px; }
+        .dot-e  { top: calc(50% - 3px); right: -4px; }
+        .dot-se { bottom: -4px; right: -4px; }
+        .dot-s  { bottom: -4px; left: calc(50% - 3px); }
+        .dot-sw { bottom: -4px; left: -4px; }
+        .dot-w  { top: calc(50% - 3px); left: -4px; }
+
+        .native-text-box.is-editing .text-content-layer,
+        .native-text-box:focus-within .text-content-layer {
             color: var(--text-color, #000000) !important;
-            background-color: #ffffff !important;
-            border: 1px dashed #e67e22 !important;
-            z-index: 100;
+            background-color: transparent !important;
             user-select: text;
         }
+        .native-text-box.selected.is-editing {
+            border: 1px solid #f97316 !important;
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+        }
 
-        /* 盖章/图片元素样式：取消自由拉伸，改用控制柄实现等比例缩放 */
+        /* 盖章/图片样式 */
         .stamp-box {
             position: absolute;
-            border: 2px dashed #e74c3c;
-            cursor: move;
+            border: 2px dashed #ef4444;
+            cursor: grab;
             z-index: 150;
             user-select: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: transparent;
+        }
+        .stamp-box.dragging {
+            cursor: grabbing !important;
         }
         .stamp-box img {
             display: block;
@@ -135,73 +370,121 @@
             height: 100%;
             pointer-events: none;
         }
-        /* 右下角等比例缩放手柄 */
+        
         .stamp-box .resize-handle {
             position: absolute;
-            right: -5px;
-            bottom: -5px;
-            width: 12px;
-            height: 12px;
-            background: #e74c3c;
-            border: 1px solid #fff;
-            border-radius: 2px;
+            right: -6px;
+            bottom: -6px;
+            width: 14px;
+            height: 14px;
+            background: #ef4444;
+            border: 2px solid #fff;
+            border-radius: 50%;
             cursor: se-resize;
             z-index: 165;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+        
         .stamp-box .delete-btn {
             position: absolute;
             top: -10px;
             right: -10px;
-            background: #e74c3c;
+            background: #ef4444;
             color: white;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             text-align: center;
-            line-height: 20px;
-            font-size: 12px;
+            line-height: 22px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
             display: none;
             z-index: 160;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
         }
-        .stamp-box:hover .delete-btn {
-            display: block;
+        .stamp-box .delete-btn:hover { transform: scale(1.1); background: #dc2626; }
+        .stamp-box:hover .delete-btn { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <label for="pdf-upload" class="btn">📂 打开 PDF</label>
+        <label for="pdf-upload" class="btn">
+            📂 打开 PDF
+        </label>
         <input type="file" id="pdf-upload" accept="application/pdf" style="display:none;">
 
-        <label for="stamp-upload" class="btn btn-warning">🏷️ 添加印章图片</label>
+        <button id="undo-btn" class="btn btn-secondary" disabled>
+            ↩️ 撤销 (Ctrl+Z)
+        </button>
+
+        <button id="format-painter-btn" class="btn btn-painter" disabled title="单击刷一次，双击连续锁定，支持局部选区，按 Esc 退出">
+            🖌️ 格式刷
+        </button>
+
+        <label for="stamp-upload" class="btn btn-warning">
+            🏷️ 添加印章
+        </label>
         <input type="file" id="stamp-upload" accept="image/*" style="display:none;">
 
         <div class="tool-group">
-            <span style="font-size: 12px;">字号:</span>
-            <input type="number" id="font-size-input" value="12" min="6" max="72" style="width: 50px; padding: 3px; font-size: 13px;">
+            <span>字体:</span>
+            <select id="font-family-select">
+                <option value="Helvetica">Helvetica (无衬线)</option>
+                <option value="TimesRoman">Times Roman (衬线)</option>
+                <option value="Courier">Courier (等宽)</option>
+            </select>
+
+            <span style="margin-left: 2px;">字号:</span>
+            <input type="number" id="font-size-input" value="12" min="4" max="96" step="0.5">
             
-            <span style="font-size: 12px; margin-left: 5px;">颜色:</span>
-            <input type="color" id="font-color-input" value="#000000" style="width: 30px; height: 24px; border: none; cursor: pointer; background: none;">
+            <span style="margin-left: 2px;">颜色:</span>
+            <input type="color" id="font-color-input" value="#000000">
         </div>
 
-        <button id="download-btn" class="btn btn-success" disabled>💾 保存并导出修改后的 PDF</button>
-        <span id="status-tip" style="font-size: 12px; color: #aaa; margin-left: auto;">支持拖拽 PDF、Ctrl+V 粘贴印章、印章等比例缩放</span>
+        <!-- 编辑界面放大/缩小控制组 -->
+        <div class="tool-group" title="支持 Ctrl + 鼠标滚轮 或快捷键 Ctrl + / - 缩放界面">
+            <button id="zoom-out-btn" class="btn-zoom" disabled title="缩小界面">➖</button>
+            <span id="zoom-level-label" class="zoom-label" title="点击恢复 100%">100%</span>
+            <button id="zoom-in-btn" class="btn-zoom" disabled title="放大界面">➕</button>
+        </div>
+
+        <button id="download-btn" class="btn btn-success" disabled>
+            💾 保存导出
+        </button>
+
+        <!-- 右上角空白处：V Love PDF (白色) + 状态提示 -->
+        <div class="toolbar-right">
+            <span class="brand-title">V Love PDF</span>
+            <span id="status-tip" style="font-size: 12px; color: #a1a1aa;">第一层纯色底填充 · 第二层无底色文字</span>
+        </div>
     </div>
 
     <div class="main-container" id="drop-container">
-        <!-- 拖拽上传覆盖层提示 -->
-        <div class="drop-zone-overlay" id="drop-overlay">释放鼠标将 PDF 拖入加载</div>
+        <div class="drop-zone-overlay" id="drop-overlay">释放鼠标将 PDF 快速载入</div>
 
-        <div id="placeholder-text" style="color: #888; margin-top: 100px; font-size: 16px; text-align: center;">
-            📄 请将 PDF 文件拖拽到此处，或点击左上角按钮打开<br><br>
-            <span style="font-size: 13px; color: #aaa;">提示：选中文字后可在上方修改字号与颜色；拖动印章右下角红点可按原始比例缩放。</span>
+        <div class="placeholder-card" id="placeholder-card">
+            <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+            <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">开始编辑您的 PDF 文档</h2>
+            <p style="font-size: 14px; color: #64748b; margin-bottom: 20px;">请将 PDF 文件直接拖拽到此处，或点击左上角按钮进行选择</p>
         </div>
 
-        <div class="pdf-wrapper" id="pdf-wrapper">
-            <canvas id="pdf-canvas"></canvas>
-            <div id="text-layer"></div>
+        <div class="zoom-stage" id="zoom-stage">
+            <div class="pdf-wrapper" id="pdf-wrapper">
+                <div id="guide-v" class="alignment-guide-v"></div>
+                <div id="guide-h" class="alignment-guide-h"></div>
+                <div id="selection-box" class="selection-box"></div>
+
+                <canvas id="pdf-canvas"></canvas>
+                <div id="text-layer"></div>
+            </div>
         </div>
     </div>
 
@@ -210,55 +493,983 @@
 
         let rawPdfBytes = null;
         let pdfDoc = null;
-        let scale = 1.5;
+        let scale = 1.5;      // 底层高分渲染倍率（固定，确保导出坐标100%无损）
+        let viewZoom = 1.0;   // 编辑界面视觉缩放倍率（50% ~ 300%）
+        let baseCanvasW = 0;
+        let baseCanvasH = 0;
         let pdfPageHeight = 0;
 
-        let activeTextBox = null; 
+        let activeTextBox = null;
+        let selectedSingleBox = null; // 严格保证一次只能选中一个元素显示小方格
+        let selectedTextBoxes = new Set();
+        let savedRangeInBox = null;   // 保存工具栏操作前的局部选区 Range
         const textBlocksMap = new Map();
         const stampsList = []; 
 
+        const undoStack = [];
+
+        // 格式刷状态
+        let painterActive = false;
+        let painterSticky = false;
+        let copiedStyle = null;
+
         const fileInput = document.getElementById('pdf-upload');
         const stampInput = document.getElementById('stamp-upload');
+        const undoBtn = document.getElementById('undo-btn');
+        const painterBtn = document.getElementById('format-painter-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomLabel = document.getElementById('zoom-level-label');
         const canvas = document.getElementById('pdf-canvas');
         const ctx = canvas.getContext('2d');
+        const zoomStage = document.getElementById('zoom-stage');
         const wrapper = document.getElementById('pdf-wrapper');
         const textLayerDiv = document.getElementById('text-layer');
         const downloadBtn = document.getElementById('download-btn');
         const statusTip = document.getElementById('status-tip');
-        const placeholder = document.getElementById('placeholder-text');
+        const placeholderCard = document.getElementById('placeholder-card');
         const dropContainer = document.getElementById('drop-container');
         const dropOverlay = document.getElementById('drop-overlay');
         
+        const guideV = document.getElementById('guide-v');
+        const guideH = document.getElementById('guide-h');
+        const selectionBox = document.getElementById('selection-box');
+
+        const fontFamilySelect = document.getElementById('font-family-select');
         const fontSizeInput = document.getElementById('font-size-input');
         const fontColorInput = document.getElementById('font-color-input');
 
-        // 监听字号变动
-        fontSizeInput.addEventListener('input', () => {
-            if (activeTextBox) {
-                const newSize = fontSizeInput.value;
-                activeTextBox.style.fontSize = `${newSize * scale}px`;
-                const data = textBlocksMap.get(Number(activeTextBox.dataset.id));
-                if (data) {
-                    data.customFontSize = parseFloat(newSize);
-                    textBlocksMap.set(Number(activeTextBox.dataset.id), data);
+        const HOLLOW_CHARS = new Set(['0', 'O', 'o', 'Q', 'D', 'P', 'R', 'B', 'A', '4', '6', '8', '9', 'a', 'b', 'd', 'e', 'g', 'p', 'q', '@', '#']);
+
+        function getContentLayer(boxEl) {
+            return boxEl ? boxEl.querySelector('.text-content-layer') : null;
+        }
+
+        function getBgLayer(boxEl) {
+            return boxEl ? boxEl.querySelector('.text-bg-layer') : null;
+        }
+
+        // --- 唯一选中控制：只有被选中的这一个元素显示四周小方格 ---
+        function selectSingleElement(boxEl) {
+            document.querySelectorAll('.native-text-box.selected, .stamp-box.selected').forEach(el => {
+                if (el !== boxEl) el.classList.remove('selected');
+            });
+            selectedTextBoxes.clear();
+            if (boxEl) {
+                boxEl.classList.add('selected');
+                selectedSingleBox = boxEl;
+                if (boxEl.classList.contains('native-text-box')) {
+                    selectedTextBoxes.add(boxEl);
+                }
+            } else {
+                selectedSingleBox = null;
+            }
+        }
+
+        // 第一层：生成对应内部空间纯色的矩形填充到文本底面（适当微扩1.5px完全遮盖底层笔画边缘）
+        function renderBaseColorLayerIntoBox(boxEl, data) {
+            const bgLayer = getBgLayer(boxEl);
+            if (!bgLayer) return;
+            bgLayer.innerHTML = '';
+
+            const pad = 1.5;
+            const subItems = (data.items && data.items.length > 0) ? data.items : [data];
+            subItems.forEach(sub => {
+                const bg = sub.origBgColor || data.origBgColor || { r: 255, g: 255, b: 255 };
+                const rectEl = document.createElement('div');
+                rectEl.className = 'text-bg-rect';
+                rectEl.style.left = `${(sub.origX - data.origX) - pad}px`;
+                rectEl.style.top = `${(sub.origY - data.origY) - pad}px`;
+                rectEl.style.width = `${Math.max(6, sub.origW) + pad * 2}px`;
+                rectEl.style.height = `${Math.max(6, sub.origH) + pad * 2}px`;
+                rectEl.style.backgroundColor = `rgb(${bg.r}, ${bg.g}, ${bg.b})`;
+                bgLayer.appendChild(rectEl);
+            });
+        }
+
+        // 第二层：位于填充层上方的无底色文本层（正常显示提取的字体颜色，保证打开即见文字）
+        function renderAlignedLinesIntoBox(boxEl, data) {
+            const contentLayer = getContentLayer(boxEl);
+            if (!contentLayer) return;
+            contentLayer.innerHTML = '';
+            contentLayer.style.backgroundColor = 'transparent';
+            contentLayer.style.color = data.currentColor || '#000000';
+
+            const subItems = (data.items && data.items.length > 0) ? data.items : null;
+            const lines = data.currentText.replace(/\r/g, '').split('\n');
+
+            if (subItems && subItems.length === lines.length && !data.styleOverridden) {
+                lines.forEach((lineText, idx) => {
+                    const sub = subItems[idx];
+                    const row = document.createElement('div');
+                    row.style.position = 'relative';
+                    row.style.backgroundColor = 'transparent';
+                    row.style.color = sub.currentColor || data.currentColor || '#000000';
+                    row.style.left = `${Math.max(0, sub.origX - data.origX)}px`;
+                    row.style.top = idx === 0
+                        ? `${Math.max(0, sub.origY - data.origY)}px`
+                        : `${Math.max(0, sub.origY - (subItems[idx - 1].origY + subItems[idx - 1].origH))}px`;
+                    row.style.fontSize = `${(sub.currentFontSize || data.currentFontSize) * scale}px`;
+                    row.style.fontFamily = getCssFontFamily(sub.currentFontFamily || data.currentFontFamily);
+                    row.style.lineHeight = '1.05';
+                    row.textContent = lineText;
+                    contentLayer.appendChild(row);
+                });
+            } else {
+                const lineStep = Math.max(data.currentFontSize * scale * 1.18, 12);
+                contentLayer.style.fontSize = `${data.currentFontSize * scale}px`;
+                contentLayer.style.fontFamily = getCssFontFamily(data.currentFontFamily);
+                contentLayer.style.lineHeight = `${lineStep}px`;
+                contentLayer.textContent = data.currentText;
+            }
+        }
+
+        // 根据鼠标客户端坐标获取精确文本插入点 Range（兼容 Chromium / Firefox）
+        function getCaretRangeFromClientPoint(clientX, clientY, containerBox) {
+            const target = getContentLayer(containerBox) || containerBox;
+            let range = null;
+            if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clientX, clientY);
+            } else if (document.caretPositionFromPoint) {
+                const pos = document.caretPositionFromPoint(clientX, clientY);
+                if (pos) {
+                    range = document.createRange();
+                    range.setStart(pos.offsetNode, pos.offset);
+                    range.collapse(true);
+                }
+            }
+            if (!range) return null;
+            if (!target.contains(range.startContainer)) {
+                const rect = target.getBoundingClientRect();
+                const fallback = document.createRange();
+                fallback.selectNodeContents(target);
+                if (clientY < rect.top + rect.height / 2) {
+                    fallback.collapse(true);
+                } else {
+                    fallback.collapse(false);
+                }
+                return fallback;
+            }
+            return range;
+        }
+
+        // 实时记录编辑框内有效局部选区
+        document.addEventListener('selectionchange', () => {
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+            const range = sel.getRangeAt(0);
+            const startBox = range.startContainer.nodeType === 1
+                ? range.startContainer.closest('.native-text-box')
+                : range.startContainer.parentElement && range.startContainer.parentElement.closest('.native-text-box');
+            const endBox = range.endContainer.nodeType === 1
+                ? range.endContainer.closest('.native-text-box')
+                : range.endContainer.parentElement && range.endContainer.parentElement.closest('.native-text-box');
+            if (startBox && startBox === endBox) {
+                savedRangeInBox = { box: startBox, range: range.cloneRange() };
+            }
+        });
+
+        // 防止点击顶部工具栏控件时丢失当前局部选区
+        [fontFamilySelect, fontSizeInput, fontColorInput, painterBtn].forEach(ctrl => {
+            ctrl.addEventListener('mousedown', () => {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+                    const range = sel.getRangeAt(0);
+                    const box = range.startContainer.nodeType === 1
+                        ? range.startContainer.closest('.native-text-box')
+                        : range.startContainer.parentElement && range.startContainer.parentElement.closest('.native-text-box');
+                    if (box) {
+                        savedRangeInBox = { box: box, range: range.cloneRange() };
+                    }
+                }
+            });
+        });
+
+        // 将样式应用到局部选区或整框（prop: 'color' | 'fontFamily' | 'fontSize'）
+        function applyStylePropToTarget(prop, value) {
+            const targetBox = activeTextBox || selectedSingleBox;
+            if (!targetBox) return;
+            const id = Number(targetBox.dataset.id);
+            const data = textBlocksMap.get(id);
+            if (!data) return;
+
+            saveStateToUndoStack();
+
+            if (!data.erasedOnCanvas) {
+                eraseOriginalPositionCompletely(data);
+                data.erasedOnCanvas = true;
+                targetBox.classList.add('is-editing');
+                applyInnerColorToBox(targetBox, data);
+            }
+
+            const contentLayer = getContentLayer(targetBox);
+            let range = null;
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && !sel.isCollapsed && contentLayer && contentLayer.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                range = sel.getRangeAt(0);
+            } else if (savedRangeInBox && savedRangeInBox.box === targetBox && !savedRangeInBox.range.collapsed) {
+                range = savedRangeInBox.range;
+            }
+
+            if (range) {
+                const span = document.createElement('span');
+                span.dataset.partialStyle = 'true';
+                span.style.backgroundColor = 'transparent';
+                if (prop === 'color') {
+                    span.style.color = value;
+                    span.dataset.color = value;
+                } else if (prop === 'fontFamily') {
+                    span.style.fontFamily = getCssFontFamily(value);
+                    span.dataset.fontFamily = value;
+                } else if (prop === 'fontSize') {
+                    span.style.fontSize = `${value * scale}px`;
+                    span.dataset.fontSize = String(value);
+                }
+
+                try {
+                    const extracted = range.extractContents();
+                    span.appendChild(extracted);
+                    range.insertNode(span);
+                    if (sel) {
+                        sel.removeAllRanges();
+                        const nextRange = document.createRange();
+                        nextRange.selectNodeContents(span);
+                        sel.addRange(nextRange);
+                        savedRangeInBox = { box: targetBox, range: nextRange.cloneRange() };
+                    }
+                } catch (err) {
+                    applyWholeBoxProp(targetBox, data, prop, value);
+                }
+            } else {
+                applyWholeBoxProp(targetBox, data, prop, value);
+            }
+
+            data.currentText = contentLayer ? contentLayer.innerText : '';
+            data.htmlSnapshot = contentLayer ? contentLayer.innerHTML : '';
+            textBlocksMap.set(id, data);
+        }
+
+        function applyWholeBoxProp(targetBox, data, prop, value) {
+            const contentLayer = getContentLayer(targetBox);
+            data.styleOverridden = true;
+            if (prop === 'color') {
+                targetBox.style.setProperty('--text-color', value);
+                data.currentColor = value;
+                data.items.forEach(sub => { sub.currentColor = value; });
+                if (contentLayer) {
+                    contentLayer.style.color = value;
+                    contentLayer.style.backgroundColor = 'transparent';
+                    contentLayer.querySelectorAll('div, span').forEach(el => {
+                        el.style.color = value;
+                        el.style.backgroundColor = 'transparent';
+                    });
+                }
+            } else if (prop === 'fontFamily') {
+                const cssFont = getCssFontFamily(value);
+                data.currentFontFamily = value;
+                data.items.forEach(sub => { sub.currentFontFamily = value; });
+                if (contentLayer) {
+                    contentLayer.style.fontFamily = cssFont;
+                    contentLayer.querySelectorAll('div, span').forEach(el => {
+                        el.style.fontFamily = cssFont;
+                    });
+                }
+            } else if (prop === 'fontSize') {
+                const pxSize = value * scale;
+                const lineStep = Math.max(pxSize * 1.18, 12);
+                data.currentFontSize = value;
+                data.items.forEach(sub => { sub.currentFontSize = value; });
+                if (contentLayer) {
+                    contentLayer.style.fontSize = `${pxSize}px`;
+                    contentLayer.style.lineHeight = `${lineStep}px`;
+                    contentLayer.querySelectorAll('div, span').forEach(el => {
+                        el.style.fontSize = `${pxSize}px`;
+                        el.style.lineHeight = `${lineStep}px`;
+                    });
+                }
+            }
+        }
+
+        // --- 编辑界面缩放控制逻辑 ---
+        function applyViewZoom(newZoom) {
+            if (!pdfDoc) return;
+            viewZoom = Math.min(3.0, Math.max(0.5, Math.round(newZoom * 100) / 100));
+            wrapper.style.transform = `scale(${viewZoom})`;
+            zoomStage.style.width = `${baseCanvasW * viewZoom}px`;
+            zoomStage.style.height = `${baseCanvasH * viewZoom}px`;
+            zoomLabel.innerText = `${Math.round(viewZoom * 100)}%`;
+        }
+
+        zoomInBtn.addEventListener('click', () => applyViewZoom(viewZoom + 0.15));
+        zoomOutBtn.addEventListener('click', () => applyViewZoom(viewZoom - 0.15));
+        zoomLabel.addEventListener('click', () => applyViewZoom(1.0));
+
+        dropContainer.addEventListener('wheel', (e) => {
+            if ((e.ctrlKey || e.metaKey) && pdfDoc) {
+                e.preventDefault();
+                const step = e.deltaY < 0 ? 0.1 : -0.1;
+                applyViewZoom(viewZoom + step);
+            }
+        }, { passive: false });
+
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = Math.min(255, Math.max(0, Math.round(x))).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join("");
+        }
+
+        function mapPdfFontToStandard(pdfFontName, styleObj) {
+            const rawName = ((pdfFontName || '') + ' ' + (styleObj && styleObj.fontFamily ? styleObj.fontFamily : '')).toLowerCase();
+            if (rawName.includes('courier') || rawName.includes('mono') || rawName.includes('consolas') || rawName.includes('ocr')) {
+                return 'Courier';
+            }
+            if (rawName.includes('times') || rawName.includes('serif') || rawName.includes('georgia') || rawName.includes('song') || rawName.includes('mincho')) {
+                return 'TimesRoman';
+            }
+            return 'Helvetica';
+        }
+
+        function getCssFontFamily(stdFont) {
+            if (stdFont === 'TimesRoman') return '"Times New Roman", Times, serif';
+            if (stdFont === 'Courier') return '"Courier New", Courier, monospace';
+            return 'Helvetica, Arial, sans-serif';
+        }
+
+        function parseStandardFontFromCss(cssFont) {
+            const s = (cssFont || '').toLowerCase();
+            if (s.includes('courier')) return 'Courier';
+            if (s.includes('times')) return 'TimesRoman';
+            return 'Helvetica';
+        }
+
+        function parseHexColorFromAny(colorVal, fallback = '#000000') {
+            if (!colorVal) return fallback;
+            if (colorVal.startsWith('#')) return colorVal;
+            const m = colorVal.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+            if (m) return rgbToHex(Number(m[1]), Number(m[2]), Number(m[3]));
+            return fallback;
+        }
+
+        // --- 格式刷核心控制逻辑（支持单击刷一次、双击连续锁定、局部选区与整框） ---
+        function exitPainterMode() {
+            painterActive = false;
+            painterSticky = false;
+            copiedStyle = null;
+            painterBtn.classList.remove('active');
+            painterBtn.innerText = '🖌️ 格式刷';
+            wrapper.classList.remove('painter-mode');
+        }
+
+        function extractStyleFromSelectionOrBox(sourceBox, srcData) {
+            let fontFamily = srcData.currentFontFamily;
+            let fontSize = srcData.currentFontSize;
+            let color = srcData.currentColor;
+            let isPartial = false;
+
+            const contentLayer = getContentLayer(sourceBox);
+            const sel = window.getSelection();
+            let activeRange = null;
+            if (sel && sel.rangeCount > 0 && !sel.isCollapsed && contentLayer && contentLayer.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                activeRange = sel.getRangeAt(0);
+            } else if (savedRangeInBox && savedRangeInBox.box === sourceBox && !savedRangeInBox.range.collapsed) {
+                activeRange = savedRangeInBox.range;
+            }
+
+            if (activeRange) {
+                const containerEl = activeRange.commonAncestorContainer.nodeType === 1
+                    ? activeRange.commonAncestorContainer
+                    : activeRange.commonAncestorContainer.parentElement;
+                const partialSpan = containerEl && containerEl.closest ? containerEl.closest('[data-partial-style="true"]') : null;
+                if (partialSpan) {
+                    const comp = getComputedStyle(partialSpan);
+                    fontFamily = partialSpan.dataset.fontFamily || parseStandardFontFromCss(comp.fontFamily);
+                    fontSize = partialSpan.dataset.fontSize ? parseFloat(partialSpan.dataset.fontSize) : Math.round((parseFloat(comp.fontSize) / scale) * 10) / 10;
+                    color = partialSpan.dataset.color || parseHexColorFromAny(comp.color, color);
+                    isPartial = true;
+                }
+            }
+
+            return { fontFamily, fontSize, color, isPartial };
+        }
+
+        function activatePainterMode(sticky = false) {
+            let sourceBox = activeTextBox || selectedSingleBox;
+            if (!sourceBox) {
+                statusTip.innerText = "请先点击选中一个文本框（或划选局部文字），再点击格式刷！";
+                return;
+            }
+
+            const srcData = textBlocksMap.get(Number(sourceBox.dataset.id));
+            if (!srcData) return;
+
+            copiedStyle = extractStyleFromSelectionOrBox(sourceBox, srcData);
+
+            painterActive = true;
+            painterSticky = sticky;
+            painterBtn.classList.add('active');
+            painterBtn.innerText = sticky ? '🖌️ 格式刷(连续)' : '🖌️ 格式刷(使用中)';
+            wrapper.classList.add('painter-mode');
+            statusTip.innerText = sticky
+                ? "已锁定连续格式刷：可连续点击多个文本框应用，再点格式刷或按 Esc 退出"
+                : "格式刷已激活：点击目标文本框应用样式，按 Esc 退出";
+        }
+
+        painterBtn.addEventListener('click', () => {
+            if (painterActive) {
+                exitPainterMode();
+                statusTip.innerText = "已退出格式刷模式";
+            } else {
+                activatePainterMode(false);
+            }
+        });
+
+        painterBtn.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            activatePainterMode(true);
+        });
+
+        function applyCopiedStyleToBlock(targetBox, customRange = null) {
+            if (!copiedStyle || !targetBox) return;
+            const id = Number(targetBox.dataset.id);
+            const data = textBlocksMap.get(id);
+            if (!data) return;
+
+            saveStateToUndoStack();
+
+            if (!data.erasedOnCanvas) {
+                eraseOriginalPositionCompletely(data);
+                data.erasedOnCanvas = true;
+            }
+
+            targetBox.classList.add('is-editing');
+            selectSingleElement(targetBox);
+            activeTextBox = targetBox;
+            applyInnerColorToBox(targetBox, data);
+
+            const contentLayer = getContentLayer(targetBox);
+            let targetRange = customRange;
+            if (!targetRange) {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0 && !sel.isCollapsed && contentLayer && contentLayer.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                    targetRange = sel.getRangeAt(0);
+                }
+            }
+
+            if (targetRange && !targetRange.collapsed) {
+                const span = document.createElement('span');
+                span.dataset.partialStyle = 'true';
+                span.style.backgroundColor = 'transparent';
+                span.style.fontFamily = getCssFontFamily(copiedStyle.fontFamily);
+                span.style.fontSize = `${copiedStyle.fontSize * scale}px`;
+                span.style.color = copiedStyle.color;
+                span.dataset.fontFamily = copiedStyle.fontFamily;
+                span.dataset.fontSize = String(copiedStyle.fontSize);
+                span.dataset.color = copiedStyle.color;
+
+                try {
+                    const content = targetRange.extractContents();
+                    span.appendChild(content);
+                    targetRange.insertNode(span);
+                } catch (err) {
+                    applyWholeBoxProp(targetBox, data, 'color', copiedStyle.color);
+                    applyWholeBoxProp(targetBox, data, 'fontFamily', copiedStyle.fontFamily);
+                    applyWholeBoxProp(targetBox, data, 'fontSize', copiedStyle.fontSize);
+                }
+            } else {
+                applyWholeBoxProp(targetBox, data, 'color', copiedStyle.color);
+                applyWholeBoxProp(targetBox, data, 'fontFamily', copiedStyle.fontFamily);
+                applyWholeBoxProp(targetBox, data, 'fontSize', copiedStyle.fontSize);
+            }
+
+            data.currentText = contentLayer ? contentLayer.innerText : '';
+            data.htmlSnapshot = contentLayer ? contentLayer.innerHTML : '';
+            textBlocksMap.set(id, data);
+
+            fontFamilySelect.value = copiedStyle.fontFamily;
+            fontSizeInput.value = copiedStyle.fontSize;
+            fontColorInput.value = copiedStyle.color;
+
+            if (!painterSticky) {
+                exitPainterMode();
+                statusTip.innerText = "已成功应用格式刷样式！";
+            } else {
+                statusTip.innerText = "已刷上样式（连续格式刷保持固定，继续点击其他框或按 Esc 退出）";
+            }
+        }
+
+        function cloneBlockData(val) {
+            return {
+                ...val,
+                origBgColor: val.origBgColor ? { ...val.origBgColor } : null,
+                currentBoxBgColor: val.currentBoxBgColor ? { ...val.currentBoxBgColor } : null,
+                items: (val.items || []).map(sub => ({
+                    ...sub,
+                    origBgColor: sub.origBgColor ? { ...sub.origBgColor } : null
+                }))
+            };
+        }
+
+        function saveStateToUndoStack() {
+            const textMapSnapshot = new Map();
+            textBlocksMap.forEach((val, key) => {
+                const snap = cloneBlockData(val);
+                const domEl = textLayerDiv.querySelector(`.native-text-box[data-id="${key}"]`);
+                if (domEl) {
+                    const cLayer = getContentLayer(domEl);
+                    snap.htmlSnapshot = cLayer ? cLayer.innerHTML : snap.htmlSnapshot;
+                    snap.currentText = cLayer ? cLayer.innerText : snap.currentText;
+                }
+                textMapSnapshot.set(key, snap);
+            });
+
+            const stampsSnapshot = stampsList.map(s => ({
+                ...s,
+                element: s.element
+            }));
+
+            undoStack.push({
+                textMap: textMapSnapshot,
+                stamps: stampsSnapshot,
+                canvasData: ctx.getImageData(0, 0, canvas.width, canvas.height)
+            });
+
+            undoBtn.disabled = false;
+        }
+
+        function performUndo() {
+            if (undoStack.length === 0) return;
+
+            const lastState = undoStack.pop();
+            ctx.putImageData(lastState.canvasData, 0, 0);
+
+            textBlocksMap.clear();
+            lastState.textMap.forEach((val, key) => textBlocksMap.set(key, cloneBlockData(val)));
+
+            textLayerDiv.innerHTML = '';
+            textBlocksMap.forEach((data, index) => {
+                if (data.currentText === "" && data.erasedOnCanvas) return;
+
+                const block = createBlockElement(data, index);
+                if (data.erasedOnCanvas) {
+                    block.classList.add('is-editing');
+                    applyInnerColorToBox(block, data);
+                }
+                textLayerDiv.appendChild(block);
+            });
+
+            stampsList.forEach(s => s.element.remove());
+            stampsList.length = 0;
+            lastState.stamps.forEach(s => {
+                stampsList.push(s);
+                wrapper.appendChild(s.element);
+            });
+
+            selectSingleElement(null);
+            activeTextBox = null;
+            savedRangeInBox = null;
+            undoBtn.disabled = undoStack.length === 0;
+            statusTip.innerText = "已成功撤销上一步操作";
+        }
+
+        undoBtn.addEventListener('click', performUndo);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && painterActive) {
+                exitPainterMode();
+                statusTip.innerText = "已退出格式刷";
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && pdfDoc) {
+                if (e.key === '=' || e.key === '+') {
+                    e.preventDefault();
+                    applyViewZoom(viewZoom + 0.15);
+                    return;
+                }
+                if (e.key === '-') {
+                    e.preventDefault();
+                    applyViewZoom(viewZoom - 0.15);
+                    return;
+                }
+                if (e.key === '0') {
+                    e.preventDefault();
+                    applyViewZoom(1.0);
+                    return;
+                }
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                performUndo();
+                return;
+            }
+
+            if (e.key === 'Delete') {
+                const activeEl = document.activeElement;
+                const isEditingSingleText = activeEl && activeEl.classList.contains('text-content-layer');
+                const parentBox = isEditingSingleText ? activeEl.closest('.native-text-box') : null;
+
+                if (isEditingSingleText && activeEl.innerText.trim() !== '') {
+                    return;
+                }
+
+                const targetBox = parentBox || selectedSingleBox || activeTextBox;
+                if (targetBox) {
+                    e.preventDefault();
+                    saveStateToUndoStack();
+                    const index = Number(targetBox.dataset.id);
+                    const data = textBlocksMap.get(index);
+                    if (data) {
+                        data.currentText = "";
+                        data.htmlSnapshot = "";
+                        data.erasedOnCanvas = true;
+                        textBlocksMap.set(index, data);
+                        eraseOriginalPositionCompletely(data);
+                    }
+                    targetBox.remove();
+                    selectSingleElement(null);
+                    activeTextBox = null;
+                    statusTip.innerText = "已成功删除选中的文本区域";
                 }
             }
         });
 
-        // 监听颜色变动
+        // 提取每个文本内部空间的纯色底色
+        function detectCharacterInnerBackground(textStr, x, y, w, h) {
+            const samplePoints = [];
+            const len = textStr.length;
+            const charW = w / Math.max(1, len);
+            const centerY = y + h * 0.5;
+
+            for (let i = 0; i < len; i++) {
+                const ch = textStr[i];
+                if (HOLLOW_CHARS.has(ch)) {
+                    const cx = x + (i + 0.5) * charW;
+                    samplePoints.push({ sx: cx, sy: centerY });
+                    samplePoints.push({ sx: cx, sy: y + h * 0.38 });
+                    samplePoints.push({ sx: cx, sy: y + h * 0.62 });
+                }
+            }
+
+            if (samplePoints.length === 0) {
+                for (let i = 1; i < len; i++) {
+                    const gapX = x + i * charW;
+                    samplePoints.push({ sx: gapX, sy: centerY });
+                }
+                samplePoints.push({ sx: x + w * 0.5, sy: y + h * 0.25 });
+                samplePoints.push({ sx: x + w * 0.5, sy: y + h * 0.75 });
+            }
+
+            const colorCounts = new Map();
+            let bestColor = null;
+            let maxCount = 0;
+
+            samplePoints.forEach(pt => {
+                const px = Math.min(canvas.width - 1, Math.max(0, Math.floor(pt.sx)));
+                const py = Math.min(canvas.height - 1, Math.max(0, Math.floor(pt.sy)));
+                try {
+                    const pixel = ctx.getImageData(px, py, 1, 1).data;
+                    const r = pixel[0], g = pixel[1], b = pixel[2];
+                    
+                    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+                    if (brightness < 140) return;
+
+                    const qr = Math.round(r / 3) * 3;
+                    const qg = Math.round(g / 3) * 3;
+                    const qb = Math.round(b / 3) * 3;
+                    const key = `${qr},${qg},${qb}`;
+
+                    const count = (colorCounts.get(key) || 0) + 1;
+                    colorCounts.set(key, count);
+
+                    if (count > maxCount) {
+                        maxCount = count;
+                        bestColor = { r, g, b };
+                    }
+                } catch (e) {}
+            });
+
+            return bestColor || { r: 255, g: 255, b: 255 };
+        }
+
+        function isSameBgColor(bgA, bgB) {
+            if (!bgA || !bgB) return true;
+            const lumA = bgA.r * 0.299 + bgA.g * 0.587 + bgA.b * 0.114;
+            const lumB = bgB.r * 0.299 + bgB.g * 0.587 + bgB.b * 0.114;
+            const rgbDiff = Math.abs(bgA.r - bgB.r) + Math.abs(bgA.g - bgB.g) + Math.abs(bgA.b - bgB.b);
+            return rgbDiff <= 22 && Math.abs(lumA - lumB) <= 12;
+        }
+
+        function scanTightTextInkBounds(rawX, rawY, rawW, rawH, innerBg) {
+            const searchX = Math.max(0, Math.floor(rawX - 1));
+            const searchY = Math.max(0, Math.floor(rawY + rawH * 0.16));
+            const searchW = Math.min(canvas.width - searchX, Math.ceil(rawW + 2));
+            const searchH = Math.min(canvas.height - searchY, Math.ceil(rawH * 0.88));
+
+            if (searchW <= 0 || searchH <= 0) {
+                return { x: rawX, y: rawY + rawH * 0.16, w: rawW, h: rawH * 0.84 };
+            }
+
+            try {
+                const imgData = ctx.getImageData(searchX, searchY, searchW, searchH).data;
+                let minX = searchW, maxX = 0, minY = searchH, maxY = 0;
+                let foundInk = false;
+
+                for (let py = 0; py < searchH; py++) {
+                    for (let px = 0; px < searchW; px++) {
+                        const idx = (py * searchW + px) * 4;
+                        const r = imgData[idx];
+                        const g = imgData[idx + 1];
+                        const b = imgData[idx + 2];
+                        const a = imgData[idx + 3];
+                        if (a < 128) continue;
+
+                        const diff = Math.abs(r - innerBg.r) + Math.abs(g - innerBg.g) + Math.abs(b - innerBg.b);
+                        if (diff > 55) {
+                            foundInk = true;
+                            if (px < minX) minX = px;
+                            if (px > maxX) maxX = px;
+                            if (py < minY) minY = py;
+                            if (py > maxY) maxY = py;
+                        }
+                    }
+                }
+
+                if (foundInk && maxX >= minX && maxY >= minY) {
+                    return {
+                        x: searchX + minX,
+                        y: searchY + minY,
+                        w: Math.max(6, maxX - minX + 1),
+                        h: Math.max(6, maxY - minY + 1)
+                    };
+                }
+            } catch (e) {}
+
+            return { x: rawX, y: searchY, w: rawW, h: searchH };
+        }
+
+        function detectOriginalTextColor(x, y, w, h, bgColor) {
+            const startX = Math.max(0, Math.floor(x));
+            const startY = Math.max(0, Math.floor(y));
+            const width = Math.min(canvas.width - startX, Math.ceil(w));
+            const height = Math.min(canvas.height - startY, Math.ceil(h));
+
+            if (width <= 0 || height <= 0) return "#000000";
+
+            try {
+                const imgData = ctx.getImageData(startX, startY, width, height).data;
+                let bestColor = null;
+                let bestScore = -1;
+
+                for (let i = 0; i < imgData.length; i += 4) {
+                    const r = imgData[i];
+                    const g = imgData[i + 1];
+                    const b = imgData[i + 2];
+                    const a = imgData[i + 3];
+                    if (a < 128) continue;
+
+                    const diffFromBg = Math.abs(r - bgColor.r) + Math.abs(g - bgColor.g) + Math.abs(b - bgColor.b);
+                    if (diffFromBg < 60) continue; 
+
+                    const maxChannel = Math.max(r, g, b);
+                    const minChannel = Math.min(r, g, b);
+                    const saturation = maxChannel - minChannel;
+                    const darkness = 255 - (r * 0.299 + g * 0.587 + b * 0.114);
+                    const score = saturation * 1.6 + darkness;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestColor = { r, g, b };
+                    }
+                }
+
+                if (bestColor) {
+                    return rgbToHex(bestColor.r, bestColor.g, bestColor.b);
+                }
+            } catch (e) {}
+
+            return "#000000";
+        }
+
+        function hasBorderLineBetween(x1, y1, x2, y2) {
+            const startX = Math.max(0, Math.floor(Math.min(x1, x2)));
+            const endX = Math.min(canvas.width - 1, Math.ceil(Math.max(x1, x2)));
+            const startY = Math.max(0, Math.floor(Math.min(y1, y2)));
+            const endY = Math.min(canvas.height - 1, Math.ceil(Math.max(y1, y2)));
+            if (endX <= startX || endY <= startY) return false;
+
+            try {
+                const imgData = ctx.getImageData(startX, startY, endX - startX + 1, endY - startY + 1).data;
+                let darkPixels = 0;
+                for (let i = 0; i < imgData.length; i += 4) {
+                    const lum = imgData[i] * 0.299 + imgData[i + 1] * 0.587 + imgData[i + 2] * 0.114;
+                    if (lum < 95) darkPixels++;
+                }
+                const span = Math.max(1, (endX - startX + 1) * (endY - startY + 1));
+                return (darkPixels / span) > 0.22;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function clusterDenseTextItems(rawItems) {
+            if (rawItems.length === 0) return [];
+
+            const sorted = [...rawItems].sort((a, b) => {
+                if (Math.abs(a.origY - b.origY) > a.origH * 0.55) {
+                    return a.origY - b.origY;
+                }
+                return a.origX - b.origX;
+            });
+
+            const groups = [];
+            const used = new Array(sorted.length).fill(false);
+
+            for (let i = 0; i < sorted.length; i++) {
+                if (used[i]) continue;
+                used[i] = true;
+                const cluster = [sorted[i]];
+
+                let changed = true;
+                while (changed) {
+                    changed = false;
+                    const cLeft = Math.min(...cluster.map(it => it.origX));
+                    const cRight = Math.max(...cluster.map(it => it.origX + it.origW));
+                    const cBottom = Math.max(...cluster.map(it => it.origY + it.origH));
+
+                    for (let j = 0; j < sorted.length; j++) {
+                        if (used[j]) continue;
+                        const cand = sorted[j];
+
+                        const refItem = cluster[cluster.length - 1];
+                        if (!isSameBgColor(refItem.origBgColor, cand.origBgColor)) continue;
+
+                        if (Math.abs(cand.originalFontSize - refItem.originalFontSize) > 2.0) continue;
+
+                        const candCenterY = cand.origY + cand.origH * 0.5;
+                        const lastCenterY = refItem.origY + refItem.origH * 0.5;
+
+                        const vGap = cand.origY - cBottom;
+                        const isSameLine = Math.abs(candCenterY - lastCenterY) <= refItem.origH * 0.45 &&
+                                           Math.abs(cand.origX - (refItem.origX + refItem.origW)) <= refItem.origH * 2.2;
+                        const isNextDenseLine = vGap >= -refItem.origH * 0.2 && vGap <= refItem.origH * 1.45;
+
+                        if (!isSameLine && !isNextDenseLine) continue;
+
+                        const candRight = cand.origX + cand.origW;
+                        const overlapX = Math.min(cRight, candRight) - Math.max(cLeft, cand.origX);
+                        const minW = Math.min(cRight - cLeft, cand.origW);
+                        const alignedLeft = Math.abs(cand.origX - cLeft) <= refItem.origH * 2.5;
+
+                        if (!isSameLine && overlapX < minW * 0.25 && !alignedLeft) continue;
+
+                        if (isNextDenseLine && vGap > 1) {
+                            const checkLeft = Math.min(cLeft, cand.origX);
+                            const checkRight = Math.max(cRight, candRight);
+                            if (hasBorderLineBetween(checkLeft, cBottom, checkRight, cand.origY)) {
+                                continue;
+                            }
+                        }
+
+                        used[j] = true;
+                        cluster.push(cand);
+                        changed = true;
+                    }
+                }
+
+                cluster.sort((a, b) => {
+                    if (Math.abs(a.origY - b.origY) > a.origH * 0.45) return a.origY - b.origY;
+                    return a.origX - b.origX;
+                });
+
+                let mergedText = "";
+                cluster.forEach((it, idx) => {
+                    if (idx === 0) {
+                        mergedText = it.originalText;
+                    } else {
+                        const prev = cluster[idx - 1];
+                        const sameRow = Math.abs(it.origY - prev.origY) <= prev.origH * 0.45;
+                        mergedText += (sameRow ? " " : "\n") + it.originalText;
+                    }
+                });
+
+                const minX = Math.min(...cluster.map(it => it.origX));
+                const minY = Math.min(...cluster.map(it => it.origY));
+                const maxX = Math.max(...cluster.map(it => it.origX + it.origW));
+                const maxY = Math.max(...cluster.map(it => it.origY + it.origH));
+
+                const first = cluster[0];
+                groups.push({
+                    originalText: mergedText,
+                    currentText: mergedText,
+                    htmlSnapshot: null,
+                    styleOverridden: false,
+                    origX: minX,
+                    origY: minY,
+                    origW: Math.max(8, maxX - minX),
+                    origH: Math.max(8, maxY - minY),
+                    x: minX,
+                    y: minY,
+                    pdfW: Math.max(8, maxX - minX) / scale,
+                    pdfH: Math.max(8, maxY - minY) / scale,
+                    originalFontSize: first.originalFontSize,
+                    originalFontFamily: first.originalFontFamily,
+                    originalColor: first.originalColor,
+                    currentFontSize: first.currentFontSize,
+                    currentFontFamily: first.currentFontFamily,
+                    currentColor: first.currentColor,
+                    erasedOnCanvas: false,
+                    origBgColor: first.origBgColor,
+                    currentBoxBgColor: first.origBgColor,
+                    items: cluster
+                });
+            }
+
+            return groups;
+        }
+
+        // 第一层纯色填充：擦除底层 canvas 对应区域，彻底消除边缘黑边残留
+        function eraseOriginalPositionCompletely(blockData) {
+            const subItems = (blockData.items && blockData.items.length > 0) ? blockData.items : [blockData];
+            subItems.forEach(sub => {
+                const { origX: x, origY: y, origW: w, origH: h, origBgColor: bg } = sub;
+                const fillBg = bg || blockData.origBgColor || { r: 255, g: 255, b: 255 };
+                ctx.save();
+                ctx.fillStyle = `rgb(${fillBg.r}, ${fillBg.g}, ${fillBg.b})`;
+                ctx.fillRect(x - 1.5, y - 1.5, w + 3.0, h + 3.0);
+                ctx.restore();
+            });
+        }
+
+        // 刷新第一层纯色底色矩形与第二层无底色文本
+        function applyInnerColorToBox(blockElement, blockData) {
+            const bg = blockData.origBgColor || { r: 255, g: 255, b: 255 };
+            blockData.currentBoxBgColor = bg;
+            renderBaseColorLayerIntoBox(blockElement, blockData);
+            const contentLayer = getContentLayer(blockElement);
+            if (contentLayer) {
+                contentLayer.style.backgroundColor = 'transparent';
+                contentLayer.style.color = blockData.currentColor || '#000000';
+            }
+        }
+
+        fontFamilySelect.addEventListener('change', () => {
+            applyStylePropToTarget('fontFamily', fontFamilySelect.value);
+        });
+
+        const handleFontSizeChange = () => {
+            const newSize = parseFloat(fontSizeInput.value);
+            if (!newSize || newSize <= 0) return;
+            applyStylePropToTarget('fontSize', newSize);
+        };
+        fontSizeInput.addEventListener('input', handleFontSizeChange);
+        fontSizeInput.addEventListener('change', handleFontSizeChange);
+
         fontColorInput.addEventListener('input', () => {
-            if (activeTextBox) {
-                const newColor = fontColorInput.value;
-                activeTextBox.style.setProperty('--text-color', newColor);
-                const data = textBlocksMap.get(Number(activeTextBox.dataset.id));
-                if (data) {
-                    data.customColor = newColor;
-                    textBlocksMap.set(Number(activeTextBox.dataset.id), data);
-                }
-            }
+            applyStylePropToTarget('color', fontColorInput.value);
         });
 
-        // --- 1. 文件加载处理 ---
         fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
 
         ['dragenter', 'dragover'].forEach(eventName => {
@@ -285,108 +1496,276 @@
                 const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(rawPdfBytes) });
                 pdfDoc = await loadingTask.promise;
                 
-                placeholder.style.display = 'none';
-                wrapper.style.display = 'inline-block';
+                placeholderCard.style.display = 'none';
+                zoomStage.style.display = 'block';
 
                 await renderPage(1);
                 
                 downloadBtn.disabled = false;
-                statusTip.innerText = "加载成功！点击文字即可直接编辑，无阴影重影。";
+                painterBtn.disabled = false;
+                zoomInBtn.disabled = false;
+                zoomOutBtn.disabled = false;
+                undoStack.length = 0;
+                undoBtn.disabled = true;
+                exitPainterMode();
+                applyViewZoom(1.0);
+                statusTip.innerText = "单击拖动框 · 双击按住拖动可选中局部文字";
             } catch (err) {
-                statusTip.innerText = "解析失败，请检查文件。";
+                statusTip.innerText = "解析失败，请检查文件格式。";
                 console.error(err);
             }
+        }
+
+        function createBlockElement(data, index) {
+            const block = document.createElement('div');
+            block.className = 'native-text-box';
+            block.dataset.id = index;
+
+            block.style.left = `${data.x}px`;
+            block.style.top = `${data.y}px`;
+            block.style.minWidth = `${data.origW}px`;
+            block.style.minHeight = `${data.origH}px`;
+            block.style.backgroundColor = 'transparent';
+            block.style.setProperty('--text-color', data.currentColor);
+
+            // 第一层：纯色底色填充层（位于文字底面）
+            const bgLayer = document.createElement('div');
+            bgLayer.className = 'text-bg-layer';
+            block.appendChild(bgLayer);
+
+            // 第二层：位于纯色填充层上方的无底色可见文本层
+            const contentLayer = document.createElement('div');
+            contentLayer.className = 'text-content-layer';
+            contentLayer.contentEditable = true;
+            contentLayer.style.fontSize = `${data.currentFontSize * scale}px`;
+            contentLayer.style.fontFamily = getCssFontFamily(data.currentFontFamily);
+            contentLayer.style.color = data.currentColor || '#000000';
+            block.appendChild(contentLayer);
+
+            const dots = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+            dots.forEach(d => {
+                const dot = document.createElement('div');
+                dot.className = `resize-dot dot-${d}`;
+                block.appendChild(dot);
+            });
+
+            renderBaseColorLayerIntoBox(block, data);
+
+            if (data.htmlSnapshot) {
+                contentLayer.innerHTML = data.htmlSnapshot;
+            } else {
+                renderAlignedLinesIntoBox(block, data);
+            }
+
+            block.addEventListener('dblclick', (e) => {
+                if (painterActive) return;
+                e.preventDefault();
+            });
+
+            block.addEventListener('mousedown', (e) => {
+                if (painterActive) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    applyCopiedStyleToBlock(block);
+                    return;
+                }
+
+                selectSingleElement(block);
+                activeTextBox = block;
+                fontFamilySelect.value = data.currentFontFamily;
+                fontSizeInput.value = data.currentFontSize;
+                fontColorInput.value = data.currentColor;
+            }, true);
+
+            contentLayer.addEventListener('focus', () => {
+                if (painterActive) return;
+
+                activeTextBox = block;
+                selectSingleElement(block);
+                block.classList.add('is-editing');
+                block.style.setProperty('--text-color', data.currentColor);
+
+                fontFamilySelect.value = data.currentFontFamily;
+                fontSizeInput.value = data.currentFontSize;
+                fontColorInput.value = data.currentColor;
+
+                if (!data.erasedOnCanvas) {
+                    saveStateToUndoStack();
+                    eraseOriginalPositionCompletely(data);
+                    data.erasedOnCanvas = true;
+                }
+                applyInnerColorToBox(block, data);
+            });
+
+            block.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (painterActive) return;
+                selectSingleElement(block);
+                activeTextBox = block;
+            });
+
+            contentLayer.addEventListener('input', () => {
+                data.currentText = contentLayer.innerText;
+                data.htmlSnapshot = contentLayer.innerHTML;
+                textBlocksMap.set(index, data);
+            });
+
+            makeDraggable(block, data);
+
+            return block;
         }
 
         async function renderPage(num) {
             textBlocksMap.clear();
             textLayerDiv.innerHTML = '';
             stampsList.length = 0;
+            selectSingleElement(null);
 
             const page = await pdfDoc.getPage(num);
             const viewport = page.getViewport({ scale: scale });
             pdfPageHeight = page.getViewport({ scale: 1.0 }).height;
 
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            baseCanvasW = viewport.width;
+            baseCanvasH = viewport.height;
+            canvas.height = baseCanvasH;
+            canvas.width = baseCanvasW;
+            wrapper.style.width = `${baseCanvasW}px`;
+            wrapper.style.height = `${baseCanvasH}px`;
 
             await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
             const textContent = await page.getTextContent();
-            const mergedItems = mergeTextItems(textContent.items, viewport);
+            const stylesMap = textContent.styles || {};
+            const validCharRegex = /[0-9A-Za-z\p{P}\p{S}]/u;
 
-            mergedItems.forEach((item, index) => {
-                if (!item.str.trim()) return;
+            const rawExtracted = [];
+            textContent.items.forEach((item, index) => {
+                if (!item.str || !validCharRegex.test(item.str)) return;
 
-                const left = item.x;
-                const top = item.y;
-                const width = Math.max(item.w, 10);
-                const height = item.h;
+                const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+                const fontHeight = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3]);
+                const rawLeft = tx[4];
+                const rawTop = tx[5] - fontHeight;
+                const rawWidth = Math.max(item.width * scale, 8);
+                const rawHeight = fontHeight * 1.05;
 
-                const block = document.createElement('div');
-                block.className = 'native-text-box';
-                block.contentEditable = true;
-                block.innerText = item.str;
-                block.dataset.id = index;
+                const innerBg = detectCharacterInnerBackground(item.str, rawLeft, rawTop, rawWidth, rawHeight);
+                const tightBounds = scanTightTextInkBounds(rawLeft, rawTop, rawWidth, rawHeight, innerBg);
+                const detectedTextColor = detectOriginalTextColor(tightBounds.x, tightBounds.y, tightBounds.w, tightBounds.h, innerBg);
+                const detectedFontFamily = mapPdfFontToStandard(item.fontName, stylesMap[item.fontName]);
+                const exactFontSize = Math.round((fontHeight / scale) * 10) / 10;
 
-                block.style.left = `${left}px`;
-                block.style.top = `${top}px`;
-                block.style.fontSize = `${item.fontSize}px`;
-                block.style.fontFamily = item.fontName || 'sans-serif';
-                // 默认设定颜色变量为原色（黑色）
-                block.style.setProperty('--text-color', '#000000');
-
-                const blockData = {
-                    id: index,
+                rawExtracted.push({
+                    rawIndex: index,
                     originalText: item.str,
                     currentText: item.str,
-                    origX: left,
-                    origY: top,
-                    origW: width,
-                    origH: height,
-                    x: left,
-                    y: top,
-                    pdfW: width / scale,
-                    pdfH: height / scale,
-                    fontSize: item.fontSize / scale,
-                    customFontSize: null,
-                    customColor: '#000000',
-                    erasedOnCanvas: false
-                };
-
-                block.addEventListener('focus', () => {
-                    activeTextBox = block;
-                    block.classList.add('is-editing');
-                    
-                    // 同步当前文本框的字号和颜色到工具栏
-                    fontSizeInput.value = blockData.customFontSize || Math.round(blockData.fontSize);
-                    fontColorInput.value = blockData.customColor || '#000000';
-
-                    // 仅擦除原本所在位置的底图，绝不会引发双重字体阴影
-                    if (!blockData.erasedOnCanvas) {
-                        ctx.fillStyle = "#ffffff";
-                        ctx.fillRect(blockData.origX - 1, blockData.origY - 1, blockData.origW + 2, blockData.origH + 2);
-                        blockData.erasedOnCanvas = true;
-                    }
+                    origX: tightBounds.x,
+                    origY: tightBounds.y,
+                    origW: tightBounds.w,
+                    origH: tightBounds.h,
+                    x: tightBounds.x,
+                    y: tightBounds.y,
+                    pdfW: tightBounds.w / scale,
+                    pdfH: tightBounds.h / scale,
+                    originalFontSize: exactFontSize,
+                    originalFontFamily: detectedFontFamily,
+                    originalColor: detectedTextColor,
+                    currentFontSize: exactFontSize,
+                    currentFontFamily: detectedFontFamily,
+                    currentColor: detectedTextColor,
+                    origBgColor: innerBg
                 });
+            });
 
-                block.addEventListener('input', () => {
-                    blockData.currentText = block.innerText;
-                    textBlocksMap.set(index, blockData);
-                });
+            const clusteredBlocks = clusterDenseTextItems(rawExtracted);
 
-                makeDraggable(block, (newX, newY) => {
-                    blockData.x = newX;
-                    blockData.y = newY;
-                    textBlocksMap.set(index, blockData);
-                });
-
+            clusteredBlocks.forEach((blockData, index) => {
+                blockData.id = index;
+                const block = createBlockElement(blockData, index);
                 textLayerDiv.appendChild(block);
                 textBlocksMap.set(index, blockData);
             });
+
+            initRectSelection();
         }
 
-        // --- 2. 印章与图片粘贴/上传功能（严格等比例缩放） ---
+        function initRectSelection() {
+            let isSelecting = false;
+            let startX, startY;
+
+            wrapper.addEventListener('mousedown', (e) => {
+                if (painterActive) return;
+
+                if (e.target.closest('.native-text-box') || e.target.closest('.stamp-box') || e.target.classList.contains('resize-handle')) {
+                    return;
+                }
+
+                if (document.activeElement && document.activeElement.classList.contains('text-content-layer')) {
+                    document.activeElement.blur();
+                }
+
+                selectSingleElement(null);
+                activeTextBox = null;
+
+                isSelecting = true;
+                const rect = wrapper.getBoundingClientRect();
+                startX = (e.clientX - rect.left) / viewZoom;
+                startY = (e.clientY - rect.top) / viewZoom;
+
+                selectionBox.style.left = `${startX}px`;
+                selectionBox.style.top = `${startY}px`;
+                selectionBox.style.width = `0px`;
+                selectionBox.style.height = `0px`;
+                selectionBox.style.display = 'block';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isSelecting) return;
+                const rect = wrapper.getBoundingClientRect();
+                const currentX = (e.clientX - rect.left) / viewZoom;
+                const currentY = (e.clientY - rect.top) / viewZoom;
+
+                const left = Math.min(startX, currentX);
+                const top = Math.min(startY, currentY);
+                const width = Math.abs(currentX - startX);
+                const height = Math.abs(currentY - startY);
+
+                selectionBox.style.left = `${left}px`;
+                selectionBox.style.top = `${top}px`;
+                selectionBox.style.width = `${width}px`;
+                selectionBox.style.height = `${height}px`;
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (!isSelecting) return;
+                isSelecting = false;
+                selectionBox.style.display = 'none';
+
+                const rect = wrapper.getBoundingClientRect();
+                const currentX = (e.clientX - rect.left) / viewZoom;
+                const currentY = (e.clientY - rect.top) / viewZoom;
+                const left = Math.min(startX, currentX);
+                const top = Math.min(startY, currentY);
+                const width = Math.abs(currentX - startX);
+                const height = Math.abs(currentY - startY);
+
+                if (width > 6 || height > 6) {
+                    const allBoxes = Array.from(wrapper.querySelectorAll('.native-text-box'));
+                    const hit = allBoxes.find(box => {
+                        const bx = box.offsetLeft;
+                        const by = box.offsetTop;
+                        const bw = box.offsetWidth;
+                        const bh = box.offsetHeight;
+                        return bx < left + width && bx + bw > left && by < top + height && by + bh > top;
+                    });
+                    if (hit) {
+                        selectSingleElement(hit);
+                        activeTextBox = hit;
+                    }
+                }
+            });
+        }
+
         stampInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) loadStampImage(file);
@@ -409,7 +1788,6 @@
             reader.onload = function(event) {
                 const imgObj = new Image();
                 imgObj.onload = function() {
-                    // 计算原始宽高比
                     const aspectRatio = imgObj.width / imgObj.height;
                     createStampElement(event.target.result, fileOrBlob.type, aspectRatio);
                 };
@@ -423,6 +1801,8 @@
                 alert("请先打开 PDF 文件再添加印章！");
                 return;
             }
+
+            saveStateToUndoStack();
 
             const initialWidth = 120;
             const initialHeight = initialWidth / aspectRatio;
@@ -438,15 +1818,17 @@
             img.src = dataUrl;
             stampDiv.appendChild(img);
 
-            // 右下角等比例缩放手柄
             const resizeHandle = document.createElement('div');
             resizeHandle.className = 'resize-handle';
             stampDiv.appendChild(resizeHandle);
+
+            initStampResize(stampDiv, aspectRatio);
 
             const delBtn = document.createElement('div');
             delBtn.className = 'delete-btn';
             delBtn.innerText = '×';
             delBtn.onclick = () => {
+                saveStateToUndoStack();
                 stampDiv.remove();
                 const idx = stampsList.indexOf(stampData);
                 if (idx > -1) stampsList.splice(idx, 1);
@@ -466,38 +1848,39 @@
             };
             stampsList.push(stampData);
 
-            // 整体移动拖拽
-            makeDraggable(stampDiv, (newX, newY) => {
-                stampData.x = newX;
-                stampData.y = newY;
-            });
+            selectSingleElement(stampDiv);
+            makeDraggable(stampDiv, stampData);
+        }
 
-            // 严格等比例缩放逻辑
+        function initStampResize(stampDiv, aspectRatio) {
+            const handle = stampDiv.querySelector('.resize-handle');
             let isResizing = false;
             let startX, startWidth;
 
-            resizeHandle.addEventListener('mousedown', (e) => {
+            handle.addEventListener('mousedown', (e) => {
                 isResizing = true;
                 startX = e.clientX;
                 startWidth = stampDiv.offsetWidth;
+                selectSingleElement(stampDiv);
+                saveStateToUndoStack();
                 e.stopPropagation();
                 e.preventDefault();
             });
 
             window.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
-                const dx = e.clientX - startX;
-                let newWidth = startWidth + dx;
-                if (newWidth < 30) newWidth = 30; // 最小宽度保护
-                
-                // 高度严格按原始比例计算，绝不会拖变形
+                const dx = (e.clientX - startX) / viewZoom;
+                let newWidth = Math.max(40, Math.min(800, startWidth + dx));
                 let newHeight = newWidth / aspectRatio;
 
                 stampDiv.style.width = `${newWidth}px`;
                 stampDiv.style.height = `${newHeight}px`;
 
-                stampData.width = newWidth;
-                stampData.height = newHeight;
+                const stampObj = stampsList.find(s => s.element === stampDiv);
+                if (stampObj) {
+                    stampObj.width = newWidth;
+                    stampObj.height = newHeight;
+                }
             });
 
             window.addEventListener('mouseup', () => {
@@ -505,73 +1888,277 @@
             });
         }
 
-        function makeDraggable(element, onMove) {
-            let isDragging = false;
-            let startX, startY;
+        // --- 单击拖动整框 · 双击不松手拖动框选局部文字 ---
+        function makeDraggable(element, itemData) {
+            let isPointerDown = false;
+            let isDraggingBox = false;
+            let isTextSelecting = false;
+            let hasCommittedDragStart = false;
+            let dragStartMouseX = 0;
+            let dragStartMouseY = 0;
+            let initX = 0;
+            let initY = 0;
+            let currentData = itemData;
+            let guideCandidates = [];
+
+            let lastDownTime = 0;
+            let lastDownX = 0;
+            let lastDownY = 0;
+            let anchorCaretRange = null;
 
             element.addEventListener('mousedown', (e) => {
-                if (e.target.classList.contains('resize-handle')) return;
-                if (element.contentEditable === 'true' && document.activeElement === element) {
+                if (painterActive) return;
+                if (e.target.classList.contains('resize-handle') || e.target.classList.contains('resize-dot')) return;
+                if (e.button !== 0) return;
+
+                const contentLayer = getContentLayer(element);
+                const now = Date.now();
+                const isDoubleDown = !!(contentLayer && contentLayer.contentEditable === 'true') && (
+                    e.detail >= 2 ||
+                    ((now - lastDownTime) <= 380 && Math.hypot(e.clientX - lastDownX, e.clientY - lastDownY) <= 10)
+                );
+                lastDownTime = now;
+                lastDownX = e.clientX;
+                lastDownY = e.clientY;
+
+                const id = element.dataset.id !== undefined ? Number(element.dataset.id) : null;
+                currentData = id !== null ? textBlocksMap.get(id) : itemData;
+
+                isPointerDown = true;
+                dragStartMouseX = e.clientX;
+                dragStartMouseY = e.clientY;
+
+                if (isDoubleDown) {
+                    isDraggingBox = false;
+                    isTextSelecting = true;
+                    element.classList.add('text-selecting-mode');
+                    if (contentLayer) {
+                        contentLayer.style.backgroundColor = 'transparent';
+                        contentLayer.focus();
+                    }
+
+                    e.preventDefault();
+                    anchorCaretRange = getCaretRangeFromClientPoint(e.clientX, e.clientY, element);
+                    if (anchorCaretRange) {
+                        const sel = window.getSelection();
+                        if (sel) {
+                            sel.removeAllRanges();
+                            sel.addRange(anchorCaretRange);
+                        }
+                    }
+                    statusTip.innerText = "已进入局部文字框选模式：拖动鼠标选中目标词语或段落";
                     return;
                 }
-                isDragging = true;
-                startX = e.clientX - element.offsetLeft;
-                startY = e.clientY - element.offsetTop;
-                e.stopPropagation();
+
+                isTextSelecting = false;
+                isDraggingBox = false;
+                hasCommittedDragStart = false;
+                initX = element.offsetLeft;
+                initY = element.offsetTop;
+
+                guideCandidates = Array.from(document.querySelectorAll('.native-text-box, .stamp-box'))
+                    .filter(el => el !== element)
+                    .map(el => ({
+                        x: el.offsetLeft,
+                        y: el.offsetTop,
+                        w: el.offsetWidth,
+                        h: el.offsetHeight,
+                        cx: el.offsetLeft + el.offsetWidth / 2,
+                        cy: el.offsetTop + el.offsetHeight / 2
+                    }));
             });
 
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const newX = e.clientX - startX;
-                const newY = e.clientY - startY;
-                
-                element.style.left = `${newX}px`;
-                element.style.top = `${newY}px`;
+            const onWindowMouseMove = (e) => {
+                if (!isPointerDown) return;
 
-                onMove(newX, newY);
-            });
-
-            window.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-        }
-
-        function mergeTextItems(items, viewport) {
-            const merged = [];
-            let current = null;
-
-            items.forEach(item => {
-                if (!item.str) return;
-
-                const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-                const fontHeight = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3]);
-                const x = tx[4];
-                const y = tx[5] - fontHeight;
-                const w = item.width * scale;
-                const h = fontHeight * 1.15;
-
-                if (!current) {
-                    current = { str: item.str, x, y, w, h, fontSize: fontHeight, fontName: item.fontName };
+                if (isTextSelecting) {
+                    const focusRange = getCaretRangeFromClientPoint(e.clientX, e.clientY, element);
+                    if (anchorCaretRange && focusRange) {
+                        const sel = window.getSelection();
+                        if (sel) {
+                            try {
+                                const mergedRange = document.createRange();
+                                const cmp = anchorCaretRange.compareBoundaryPoints(Range.START_TO_START, focusRange);
+                                if (cmp <= 0) {
+                                    mergedRange.setStart(anchorCaretRange.startContainer, anchorCaretRange.startOffset);
+                                    mergedRange.setEnd(focusRange.startContainer, focusRange.startOffset);
+                                } else {
+                                    mergedRange.setStart(focusRange.startContainer, focusRange.startOffset);
+                                    mergedRange.setEnd(anchorCaretRange.startContainer, anchorCaretRange.startOffset);
+                                }
+                                sel.removeAllRanges();
+                                sel.addRange(mergedRange);
+                                if (!mergedRange.collapsed) {
+                                    savedRangeInBox = { box: element, range: mergedRange.cloneRange() };
+                                }
+                            } catch (err) {}
+                        }
+                    }
                     return;
                 }
 
-                const sameLine = Math.abs(current.y - y) < fontHeight * 0.3;
-                const isClose = (x - (current.x + current.w)) < (fontHeight * 0.8);
+                const deltaX = (e.clientX - dragStartMouseX) / viewZoom;
+                const deltaY = (e.clientY - dragStartMouseY) / viewZoom;
 
-                if (sameLine && isClose) {
-                    current.str += item.str;
-                    current.w = (x + w) - current.x;
-                } else {
-                    merged.push(current);
-                    current = { str: item.str, x, y, w, h, fontSize: fontHeight, fontName: item.fontName };
+                if (!isDraggingBox && Math.hypot(deltaX, deltaY) < 2) return;
+
+                if (!isDraggingBox) {
+                    isDraggingBox = true;
+                    element.classList.add('dragging');
+                    const cLayer = getContentLayer(element);
+                    if (cLayer) cLayer.style.backgroundColor = 'transparent';
+                    const sel = window.getSelection();
+                    if (sel && sel.removeAllRanges) sel.removeAllRanges();
                 }
-            });
 
-            if (current) merged.push(current);
-            return merged;
+                if (!hasCommittedDragStart) {
+                    hasCommittedDragStart = true;
+                    saveStateToUndoStack();
+                    if (element.classList.contains('native-text-box') && currentData && !currentData.erasedOnCanvas) {
+                        eraseOriginalPositionCompletely(currentData);
+                        currentData.erasedOnCanvas = true;
+                        element.classList.add('is-editing');
+                        applyInnerColorToBox(element, currentData);
+                    }
+                }
+
+                const targetX = initX + deltaX;
+                const targetY = initY + deltaY;
+                const currentW = element.offsetWidth;
+                const currentH = element.offsetHeight;
+                const currentCenterX = targetX + currentW / 2;
+                const currentCenterY = targetY + currentH / 2;
+
+                const TOLERANCE = 3;
+                let matchedV = false;
+                let matchedH = false;
+
+                for (let i = 0; i < guideCandidates.length; i++) {
+                    const cand = guideCandidates[i];
+                    if (!matchedV && (
+                        Math.abs(targetX - cand.x) <= TOLERANCE ||
+                        Math.abs((targetX + currentW) - (cand.x + cand.w)) <= TOLERANCE ||
+                        Math.abs(currentCenterX - cand.cx) <= TOLERANCE
+                    )) {
+                        let guideX = cand.x;
+                        if (Math.abs((targetX + currentW) - (cand.x + cand.w)) <= TOLERANCE) guideX = cand.x + cand.w;
+                        else if (Math.abs(currentCenterX - cand.cx) <= TOLERANCE) guideX = cand.cx;
+                        guideV.style.left = `${guideX}px`;
+                        guideV.style.display = 'block';
+                        matchedV = true;
+                    }
+
+                    if (!matchedH && (
+                        Math.abs(targetY - cand.y) <= TOLERANCE ||
+                        Math.abs((targetY + currentH) - (cand.y + cand.h)) <= TOLERANCE ||
+                        Math.abs(currentCenterY - cand.cy) <= TOLERANCE
+                    )) {
+                        let guideY = cand.y;
+                        if (Math.abs((targetY + currentH) - (cand.y + cand.h)) <= TOLERANCE) guideY = cand.y + cand.h;
+                        else if (Math.abs(currentCenterY - cand.cy) <= TOLERANCE) guideY = cand.cy;
+                        guideH.style.top = `${guideY}px`;
+                        guideH.style.display = 'block';
+                        matchedH = true;
+                    }
+
+                    if (matchedV && matchedH) break;
+                }
+
+                if (!matchedV) guideV.style.display = 'none';
+                if (!matchedH) guideH.style.display = 'none';
+
+                element.style.left = `${targetX}px`;
+                element.style.top = `${targetY}px`;
+
+                if (currentData) {
+                    currentData.x = targetX;
+                    currentData.y = targetY;
+                    if (element.classList.contains('native-text-box')) {
+                        textBlocksMap.set(currentData.id, currentData);
+                    }
+                }
+            };
+
+            const onWindowMouseUp = () => {
+                if (!isPointerDown) return;
+                isPointerDown = false;
+
+                if (isTextSelecting) {
+                    isTextSelecting = false;
+                    element.classList.remove('text-selecting-mode');
+                    const cLayer = getContentLayer(element);
+                    if (cLayer) cLayer.style.backgroundColor = 'transparent';
+                    const sel = window.getSelection();
+                    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+                        savedRangeInBox = { box: element, range: sel.getRangeAt(0).cloneRange() };
+                        statusTip.innerText = "已选中局部文字 · 可直接修改颜色/字体/字号或用格式刷";
+                    }
+                }
+
+                if (isDraggingBox) {
+                    isDraggingBox = false;
+                    element.classList.remove('dragging');
+                    const cLayer = getContentLayer(element);
+                    if (cLayer) cLayer.style.backgroundColor = 'transparent';
+                    guideV.style.display = 'none';
+                    guideH.style.display = 'none';
+                }
+            };
+
+            window.addEventListener('mousemove', onWindowMouseMove);
+            window.addEventListener('mouseup', onWindowMouseUp);
         }
 
-        // --- 3. 导出保存 PDF ---
+        function hexToPdfRgb(hexStr, rgbFn) {
+            const hex = (hexStr || '#000000').replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16) / 255;
+            const g = parseInt(hex.substring(2, 4), 16) / 255;
+            const b = parseInt(hex.substring(4, 6), 16) / 255;
+            return rgbFn(r, g, b);
+        }
+
+        // 解析含局部样式 span 的行片段
+        function extractStyledRunsFromDom(boxEl, defaultFont, defaultSize, defaultColor) {
+            const contentLayer = getContentLayer(boxEl) || boxEl;
+            if (!contentLayer) return null;
+            const hasPartial = contentLayer.querySelector('[data-partial-style="true"]');
+            if (!hasPartial) return null;
+
+            const runs = [];
+            function walk(node, inherited) {
+                if (node.nodeType === 3) {
+                    const txt = node.nodeValue.replace(/\r/g, '');
+                    if (txt.length > 0) {
+                        runs.push({ text: txt, ...inherited });
+                    }
+                } else if (node.nodeType === 1) {
+                    if (node.classList && node.classList.contains('resize-dot')) return;
+                    const nextStyle = { ...inherited };
+                    if (node.dataset && node.dataset.partialStyle === 'true') {
+                        if (node.dataset.fontFamily) nextStyle.fontFamily = node.dataset.fontFamily;
+                        if (node.dataset.fontSize) nextStyle.fontSize = parseFloat(node.dataset.fontSize);
+                        if (node.dataset.color) nextStyle.color = node.dataset.color;
+                    }
+                    const isBlockBreak = (node.tagName === 'DIV' || node.tagName === 'P') && runs.length > 0;
+                    if (isBlockBreak) {
+                        runs.push({ text: '\n', ...nextStyle });
+                    }
+                    if (node.tagName === 'BR') {
+                        runs.push({ text: '\n', ...nextStyle });
+                        return;
+                    }
+                    node.childNodes.forEach(ch => walk(ch, nextStyle));
+                }
+            }
+
+            walk(contentLayer, {
+                fontFamily: defaultFont,
+                fontSize: defaultSize,
+                color: defaultColor
+            });
+            return runs;
+        }
+
         downloadBtn.addEventListener('click', async () => {
             if (!rawPdfBytes) return;
 
@@ -579,63 +2166,149 @@
             downloadBtn.disabled = true;
 
             try {
-                const { PDFDocument, rgb } = PDFLib;
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 const pdfDocToEdit = await PDFDocument.load(rawPdfBytes);
-                const font = await pdfDocToEdit.embedFont(PDFLib.StandardFonts.Helvetica);
+                
+                const fontMap = {
+                    'Helvetica': await pdfDocToEdit.embedFont(StandardFonts.Helvetica),
+                    'TimesRoman': await pdfDocToEdit.embedFont(StandardFonts.TimesRoman),
+                    'Courier': await pdfDocToEdit.embedFont(StandardFonts.Courier)
+                };
 
                 const pages = pdfDocToEdit.getPages();
                 const firstPage = pages[0];
 
                 let modifiedCount = 0;
 
-                // 1. 处理文本修改
-                textBlocksMap.forEach((item) => {
+                textBlocksMap.forEach((item, idxKey) => {
+                    const domBox = textLayerDiv.querySelector(`.native-text-box[data-id="${idxKey}"]`);
+                    const contentLayer = getContentLayer(domBox);
+                    const hasPartialDom = !!(contentLayer && contentLayer.querySelector('[data-partial-style="true"]'));
+
                     const isMoved = item.x !== item.origX || item.y !== item.origY;
                     const isTextChanged = item.originalText !== item.currentText;
-                    const isStyled = item.customFontSize || item.customColor !== '#000000';
+                    const isStyleChanged = item.currentFontSize !== item.originalFontSize ||
+                                           item.currentColor !== item.originalColor ||
+                                           item.currentFontFamily !== item.originalFontFamily ||
+                                           hasPartialDom;
 
-                    if (!isTextChanged && !isMoved && !isStyled) return;
+                    if (!isTextChanged && !isMoved && !isStyleChanged) return;
                     modifiedCount++;
 
-                    const origPdfX = item.origX / scale;
-                    const origPdfY = pdfPageHeight - (item.origY / scale) - item.pdfH;
-                    firstPage.drawRectangle({
-                        x: origPdfX - 1,
-                        y: origPdfY - 1,
-                        width: item.pdfW + 2,
-                        height: item.pdfH + 2,
-                        color: rgb(1, 1, 1),
+                    const subItems = (item.items && item.items.length > 0) ? item.items : [item];
+                    const pdfPad = 1.5 / scale;
+
+                    // 第一层：先在文本对应区域绘制纯色底色矩形填充到底面（微扩覆盖完整笔画边缘）
+                    subItems.forEach(sub => {
+                        const origPdfX = sub.origX / scale;
+                        const origPdfY = pdfPageHeight - (sub.origY / scale) - (sub.origH / scale);
+                        const origBg = sub.origBgColor || item.origBgColor || { r: 255, g: 255, b: 255 };
+
+                        firstPage.drawRectangle({
+                            x: origPdfX - pdfPad,
+                            y: origPdfY - pdfPad,
+                            width: (sub.origW / scale) + pdfPad * 2,
+                            height: (sub.origH / scale) + pdfPad * 2,
+                            color: rgb(origBg.r / 255, origBg.g / 255, origBg.b / 255),
+                        });
                     });
 
-                    const finalPdfX = item.x / scale;
-                    const finalPdfY = pdfPageHeight - (item.y / scale) - item.pdfH;
+                    // 第二层：在第一层纯色底色上方绘制无底色文本
+                    const finalFontSize = item.currentFontSize || item.originalFontSize;
+                    const baseFontName = fontMap[item.currentFontFamily] ? item.currentFontFamily : 'Helvetica';
+                    const baseColorHex = item.currentColor || item.originalColor;
 
-                    let newText = item.currentText.replace(/[\r\n]/g, '').trim();
-                    newText = newText.replace(/[^\x00-\x7F]/g, '');
+                    const styledRuns = extractStyledRunsFromDom(domBox, baseFontName, finalFontSize, baseColorHex);
 
-                    let textColor = rgb(0, 0, 0);
-                    if (item.customColor) {
-                        const hex = item.customColor.replace('#', '');
-                        const r = parseInt(hex.substring(0, 2), 16) / 255;
-                        const g = parseInt(hex.substring(2, 4), 16) / 255;
-                        const b = parseInt(hex.substring(4, 6), 16) / 255;
-                        textColor = rgb(r, g, b);
-                    }
-
-                    const finalFontSize = item.customFontSize ? item.customFontSize : item.fontSize;
-
-                    if (newText) {
-                        firstPage.drawText(newText, {
-                            x: finalPdfX,
-                            y: finalPdfY + (finalFontSize * 0.15),
-                            size: finalFontSize,
-                            font: font,
-                            color: textColor,
+                    if (styledRuns) {
+                        const linesRuns = [[]];
+                        styledRuns.forEach(r => {
+                            const parts = r.text.split('\n');
+                            parts.forEach((p, pIdx) => {
+                                if (pIdx > 0) linesRuns.push([]);
+                                const clean = p.replace(/[^\x00-\x7F]/g, '');
+                                if (clean.length > 0) {
+                                    linesRuns[linesRuns.length - 1].push({
+                                        text: clean,
+                                        fontFamily: r.fontFamily,
+                                        fontSize: r.fontSize,
+                                        color: r.color
+                                    });
+                                }
+                            });
                         });
+
+                        const firstSubH = subItems[0] ? (subItems[0].origH / scale) : (finalFontSize * 1.1);
+                        const lineStep = Math.max(finalFontSize * 1.25, firstSubH);
+
+                        linesRuns.forEach((lineArr, lIdx) => {
+                            if (lineArr.length === 0) return;
+                            const useOrigLinePos = !isMoved && linesRuns.length === subItems.length;
+                            let cursorX = useOrigLinePos ? (subItems[lIdx].origX / scale) : (item.x / scale);
+                            const linePdfY = useOrigLinePos
+                                ? (pdfPageHeight - (subItems[lIdx].origY / scale) - (subItems[lIdx].origH / scale))
+                                : (pdfPageHeight - ((item.y + lIdx * lineStep * scale) / scale) - firstSubH);
+
+                            lineArr.forEach(run => {
+                                const fKey = fontMap[run.fontFamily] ? run.fontFamily : baseFontName;
+                                const fObj = fontMap[fKey];
+                                const fSize = run.fontSize || finalFontSize;
+                                const cObj = hexToPdfRgb(run.color || baseColorHex, rgb);
+                                firstPage.drawText(run.text, {
+                                    x: cursorX,
+                                    y: linePdfY + (fSize * 0.08),
+                                    size: fSize,
+                                    font: fObj,
+                                    color: cObj,
+                                });
+                                cursorX += fObj.widthOfTextAtSize(run.text, fSize);
+                            });
+                        });
+                    } else {
+                        const cleanedLines = item.currentText
+                            .replace(/\r/g, '')
+                            .split('\n')
+                            .map(line => line.replace(/[^\x00-\x7F]/g, '').trim())
+                            .filter(line => line.length > 0);
+
+                        if (cleanedLines.length === 0) return;
+
+                        const activeFont = fontMap[baseFontName];
+                        const textColor = hexToPdfRgb(baseColorHex, rgb);
+
+                        if (!isMoved && cleanedLines.length === subItems.length) {
+                            cleanedLines.forEach((lineText, idx) => {
+                                const sub = subItems[idx];
+                                const linePdfX = sub.origX / scale;
+                                const linePdfY = pdfPageHeight - (sub.origY / scale) - (sub.origH / scale);
+                                firstPage.drawText(lineText, {
+                                    x: linePdfX,
+                                    y: linePdfY + (finalFontSize * 0.08),
+                                    size: finalFontSize,
+                                    font: activeFont,
+                                    color: textColor,
+                                });
+                            });
+                        } else {
+                            const basePdfX = item.x / scale;
+                            const firstSubH = subItems[0] ? (subItems[0].origH / scale) : (finalFontSize * 1.1);
+                            const lineStep = Math.max(finalFontSize * 1.25, firstSubH);
+
+                            cleanedLines.forEach((lineText, idx) => {
+                                const lineTopPx = item.y + idx * lineStep * scale;
+                                const linePdfY = pdfPageHeight - (lineTopPx / scale) - firstSubH;
+                                firstPage.drawText(lineText, {
+                                    x: basePdfX,
+                                    y: linePdfY + (finalFontSize * 0.08),
+                                    size: finalFontSize,
+                                    font: activeFont,
+                                    color: textColor,
+                                });
+                            });
+                        }
                     }
                 });
 
-                // 2. 处理印章嵌入
                 for (let stamp of stampsList) {
                     const imgBytes = await fetch(stamp.dataUrl).then(res => res.arrayBuffer());
                     let embeddedImage;
@@ -666,7 +2339,7 @@
                 link.download = 'modified_and_stamped.pdf';
                 link.click();
 
-                statusTip.innerText = `导出成功！应用了 ${modifiedCount} 处修改并自动下载。`;
+                statusTip.innerText = `导出成功！应用了 ${modifiedCount} 处修改。`;
             } catch (err) {
                 statusTip.innerText = `导出失败: ${err.message || '请查看控制台'}`;
                 console.error("PDF Export Error:", err);
