@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>CMA & EGLV & MSK MBL  批量改名工具</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+
+body{
+    font-family:Segoe UI;
+    background:#f5f7fa;
+    padding:20px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+}
+
+.dropzone{
+    border:3px dashed #0078d7;
+    background:white;
+    padding:60px;
+    text-align:center;
+    border-radius:12px;
+    cursor:pointer;
+}
+
+.dropzone:hover{
+    background:#eef6ff;
+}
+
+.status{
+    margin-top:15px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+    background:white;
+}
+
+th{
+    background:#0078d7;
+    color:white;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:10px;
+}
+
+button{
+    border:none;
+    border-radius:6px;
+    padding:12px 20px;
+    color:white;
+    cursor:pointer;
+    margin-top:15px;
+}
+
+#downloadAllBtn{
+    background:#28a745;
+    display:none;
+}
+
+#downloadAllBtn:hover{
+    background:#218838;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>CMA & EGLV & MSK MBL  批量改名工具</h1>
+
+<div id="dropzone" class="dropzone">
+
+拖放 PDF 到这里
+
+<br><br>
+
+或点击选择文件
+
+<input
+    type="file"
+    id="fileInput"
+    multiple
+    accept=".pdf"
+    hidden>
+
+</div>
+
+<div class="status" id="status"></div>
+
+<button id="downloadAllBtn">
+📦 批量下载ZIP
+</button>
+
+<table id="resultTable" style="display:none">
+
+<thead>
+
+<tr>
+<th>原文件名</th>
+<th>识别出的MBL单号</th>
+<th>下载</th>
+</tr>
+
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const dropzone =
+document.getElementById('dropzone');
+
+const fileInput =
+document.getElementById('fileInput');
+
+const status =
+document.getElementById('status');
+
+const table =
+document.getElementById('resultTable');
+
+const tbody =
+table.querySelector('tbody');
+
+const downloadAllBtn =
+document.getElementById('downloadAllBtn');
+
+let processedFiles = [];
+
+
+dropzone.addEventListener('click',()=>{
+    fileInput.click();
+});
+
+dropzone.addEventListener('dragover',(e)=>{
+    e.preventDefault();
+});
+
+dropzone.addEventListener('drop',(e)=>{
+    e.preventDefault();
+    processFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change',(e)=>{
+    processFiles(e.target.files);
+});
+
+
+async function extractWaybill(file){
+
+    try{
+
+        const buffer =
+            await file.arrayBuffer();
+
+        const pdf =
+            await pdfjsLib
+            .getDocument({data:buffer})
+            .promise;
+
+        let text = "";
+
+        const pages =
+            Math.min(pdf.numPages,2);
+
+        for(let i=1;i<=pages;i++){
+
+            const page =
+                await pdf.getPage(i);
+
+            const content =
+                await page.getTextContent();
+
+            text += content.items
+                .map(x=>x.str)
+                .join(" ");
+
+            text += "\n";
+        }
+
+        text = text.toUpperCase();
+
+// 1. CMA/EGLV
+const match =
+text.match(
+/\b(SSZX\d+[A-Z]*|SHZ\d+[A-Z]*|SHA\d+[A-Z]*|ALK\d+[A-Z]*|HKA\d+[A-Z]*|CNC\d+[A-Z]*|CMZ\d+[A-Z]*|GGZ\d+[A-Z]*|CNH\d+[A-Z]*|EGLV\d+[A-Z]*|SZX\d+[A-Z]*)\b/
+);
+
+if(match){
+    let waybill = match[1];
+
+    if(waybill.startsWith("EGLV")){
+        waybill = waybill.replace("EGLV","");
+    }
+
+    return waybill;
+}
+
+// ==========================
+// MAERSK
+// ==========================
+
+let maerskBL = text.match(
+    /B\/L\s*(?:NO\.?|:)\s*(\d{8,12})/i
+);
+
+if(maerskBL){
+
+    return maerskBL[1];
+}
+return "未找到";
+
+
+
+      if(match){
+        let waybill = match[1];
+
+        if(waybill.startsWith("EGLV")){
+            waybill = waybill.replace("EGLV", "");
+    }
+
+    return waybill;
+}
+
+        return "未找到";
+
+    }
+    catch(err){
+
+        console.log(err);
+
+        return "读取失败";
+    }
+}
+
+
+async function processFiles(files){
+
+    processedFiles=[];
+
+    tbody.innerHTML='';
+
+    table.style.display='table';
+
+    downloadAllBtn.style.display='none';
+
+    let ok=0;
+
+    status.innerHTML='处理中...';
+
+    for(const file of files){
+
+        const waybill =
+            await extractWaybill(file);
+
+        let downloadHtml='';
+
+        if(
+            waybill !== '未找到' &&
+            waybill !== '读取失败'
+        ){
+
+            ok++;
+
+            processedFiles.push({
+                file:file,
+                name:waybill + '.pdf'
+            });
+
+            const url =
+                URL.createObjectURL(file);
+
+            downloadHtml=
+            `<a href="${url}"
+                download="${waybill}.pdf">
+                下载
+            </a>`;
+        }
+
+        const row =
+            document.createElement('tr');
+
+        row.innerHTML=
+        `
+        <td>${file.name}</td>
+        <td>${waybill}</td>
+        <td>${downloadHtml}</td>
+        `;
+
+        tbody.appendChild(row);
+    }
+
+    status.innerHTML =
+        `完成，共识别 ${ok} 个 PDF`;
+
+    if(processedFiles.length>0){
+
+        downloadAllBtn.style.display =
+            'inline-block';
+    }
+}
+
+
+downloadAllBtn.addEventListener(
+'click',
+
+async ()=>{
+
+    const zip = new JSZip();
+
+    for(const item of processedFiles){
+
+        const buffer =
+            await item.file.arrayBuffer();
+
+        zip.file(
+            item.name,
+            buffer
+        );
+    }
+
+    const content =
+        await zip.generateAsync({
+            type:'blob'
+        });
+
+    const url =
+        URL.createObjectURL(content);
+
+    const a =
+        document.createElement('a');
+
+    a.href = url;
+
+    a.download =
+        'CMA_Renamed_PDFs.zip';
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+});
+
+</script>
+
+</body>
+</html>
