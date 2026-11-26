@@ -194,8 +194,16 @@
   #bgm-badge {
     align-self: flex-end;
     font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 2px;
-    color: #7df9ff; background: rgba(8, 14, 28, 0.78);
-    border: 1px solid rgba(0, 229, 255, 0.35); padding: 3px 9px; margin-bottom: 4px;
+    color: #c4b5fd; background: rgba(8, 14, 28, 0.78);
+    border: 1px solid rgba(167, 139, 250, 0.55); padding: 3px 9px; margin-bottom: 4px;
+    transition: color 0.25s, border-color 0.25s, box-shadow 0.25s;
+  }
+  #bgm-badge.boss {
+    color: #fde68a; border-color: rgba(251, 191, 36, 0.65);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.25);
+  }
+  #bgm-badge.slowmo {
+    color: #c4b5fd; border-color: rgba(167, 139, 250, 0.65);
   }
   #bgm-badge.muted { color: #8ba8c7; border-color: rgba(139, 168, 199, 0.25); opacity: 0.7; }
   .kill-item {
@@ -332,7 +340,7 @@
   </div>
 
   <div id="kill-feed">
-    <div id="bgm-badge">SYNTH BGM // ON [M]</div>
+    <div id="bgm-badge">SYNTH BGM // BULLET-TIME 100BPM [M]</div>
   </div>
   <div id="damage-vignette"></div>
   <div id="shield-vignette"></div>
@@ -355,10 +363,10 @@
     <div class="ctrl-row"><span class="key-cap">SHIFT</span><span>冲刺 / 滑铲 (Ctrl/C)</span></div>
     <div class="ctrl-row"><span class="key-cap">1 / 2 / 3</span><span>切换三系重火力武器</span></div>
     <div class="ctrl-row"><span class="key-cap">R</span><span>战术换弹</span></div>
-    <div class="ctrl-row"><span class="key-cap">Q / M</span><span>子弹时间 / 切换纯音乐</span></div>
+    <div class="ctrl-row"><span class="key-cap">Q / M</span><span>子弹时间 / 静音切换</span></div>
   </div>
   <button class="btn" id="start-btn">部署至街区公路</button>
-  <div class="hint">每波刷新大BOSS掉落跨局装备 · 街区路灯与街道补建 · 车辆出界消失 · 重开清空装备</div>
+  <div class="hint">单曲独占防重叠 · 默认子弹时间 BGM（100 BPM 起步随时间与关卡加速）</div>
 </div>
 
 <!-- 结束菜单 -->
@@ -416,12 +424,11 @@ const WEAPONS = [
   }
 ];
 
-// 装备仅在当前游玩生涯中有效，重开（restart / location.reload）后全部清零，可跨波次使用
 const gear = {
-  extMagLevel: 0,      // 扩容弹夹层数
-  upgradeLevel: 0,     // 武器升级层数（提升伤害与射速）
-  silencer: false,     // 消音器（大幅降低枪声吸引半径）
-  scopeLevel: 0        // 倍镜层数（进一步缩小 ADS 视角 FOV）
+  extMagLevel: 0,
+  upgradeLevel: 0,
+  silencer: false,
+  scopeLevel: 0
 };
 
 function getEffectiveMagSize(wIdx) {
@@ -456,6 +463,7 @@ const state = {
   ammo: [32, 8, 5],
   score: 0, wave: 0, kills: 0, headshots: 0,
   combo: 0, comboTimer: 0,
+  runElapsedSec: 0,
   enemiesToSpawn: 0, bossToSpawn: false,
   spawnTimer: 0, waveBreak: 2.0,
   reloading: false, reloadTimer: 0, reloadDuration: 1.25,
@@ -848,7 +856,6 @@ function addCityLandmarkBuilding(x, z, style, matIdx, accentIdx) {
   scene.add(g);
 }
 
-// 道路两侧路灯摆布（2. 要求）
 function addStreetLamp(x, z, armDirX = 0, armDirZ = 0, accentIdx = 0) {
   const lg = new THREE.Group();
   const trim = trimMats[accentIdx % trimMats.length];
@@ -905,24 +912,18 @@ function addHighwayCorridor(axis, offset) {
   });
 }
 
-// 四条主干道：x = -24, x = +24, z = -24, z = +24
 addHighwayCorridor('x', -24);
 addHighwayCorridor('x', 24);
 addHighwayCorridor('z', -24);
 addHighwayCorridor('z', 24);
 
-// 沿四条主干道两侧摆放路灯
 [-56, -38, -10, 10, 38, 56].forEach((pos, idx) => {
-  // 道路 X = -24 两侧（避开路口 ±24 中心）
   addStreetLamp(-29.2, pos, 1, 0, idx);
   addStreetLamp(-18.8, pos, -1, 0, idx + 1);
-  // 道路 X = +24 两侧
   addStreetLamp(18.8, pos, 1, 0, idx + 2);
   addStreetLamp(29.2, pos, -1, 0, idx + 3);
-  // 道路 Z = -24 两侧
   addStreetLamp(pos, -29.2, 0, 1, idx + 1);
   addStreetLamp(pos, -18.8, 0, -1, idx + 2);
-  // 道路 Z = +24 两侧
   addStreetLamp(pos, 18.8, 0, 1, idx + 3);
   addStreetLamp(pos, 29.2, 0, -1, idx + 4);
 });
@@ -1162,7 +1163,6 @@ function addBillboard(x, y, z, rotY, w, h, title, sub, bgHex, borderHex, textHex
   scene.add(board);
 }
 
-// 1. 透明边界力场
 const boundaryBarrierMat = new THREE.MeshBasicMaterial({
   color: 0x22d3ee, transparent: true, opacity: 0.055,
   side: THREE.DoubleSide, depthWrite: false
@@ -1191,7 +1191,6 @@ const boundaryWireMat = new THREE.LineBasicMaterial({
   scene.add(topLine);
 });
 
-// 2. 条状街区与公路沿线建筑群 + 空旷区街道排布建筑（1. 要求）
 addCoverBox(0, 0, 4.4, 2.8, 4.4, 1, facadeMats[1], true, false);
 
 addSteppedTower(-10.5, -10.5, 5.2, 5.2, 9, 7, 4, 0, 0);
@@ -1223,7 +1222,6 @@ addCityLandmarkBuilding(34, 34, 'spire', 1, 1);
   addPrismBuilding(33, pos, 3.3, 18 + ((i + 2) % 3) * 3, 6, (i + 3) % 6, (i + 4) % 6);
 });
 
-// 额外在四角与外围空旷地带按街道排布建筑物
 [-52, -40, 40, 52].forEach((bx, ix) => {
   [-52, -40, 40, 52].forEach((bz, iz) => {
     if ((ix + iz) % 2 === 0) {
@@ -1239,38 +1237,31 @@ addSteppedTower(-64, 14, 7.6, 7.2, 20, 13, 6, 3, 1);
 addSteppedTower(64, -14, 7.6, 7.2, 24, 15, 8, 0, 2);
 addSteppedTower(64, 14, 7.6, 7.2, 21, 14, 7, 1, 3);
 
-// 3. 红绿灯与四条公路（每条道路约 3 辆车，共 12 辆）
 addTrafficLight(-6.2, 6.2, 0, 1);
 addTrafficLight(6.2, -6.2, Math.PI, 1);
 addTrafficLight(-20.2, 19.8, Math.PI / 2, 0);
 addTrafficLight(20.2, -19.8, -Math.PI / 2, 0);
 
-// 公路 X = -24（3 辆）
 addHighwayCar(-21.8, -34.0, 0, 0x0284c7, 0x22d3ee, 8.2, 'z', 1);
 addHighwayCar(-21.8, 4.0, 0, 0x06b6d4, 0x67e8f9, 8.2, 'z', 1);
 addHighwayCar(-26.2, 22.0, Math.PI, 0xd946ef, 0xf472b6, 7.8, 'z', -1);
 
-// 公路 X = +24（3 辆）
 addHighwayCar(21.8, -18.0, 0, 0x16a34a, 0x4ade80, 8.5, 'z', 1);
 addHighwayCar(26.2, -8.0, Math.PI, 0xea580c, 0xfbbf24, 8.0, 'z', -1);
 addHighwayCar(26.2, 32.0, Math.PI, 0xf59e0b, 0xfde68a, 8.0, 'z', -1);
 
-// 公路 Z = -24（3 辆）
 addHighwayCar(-32.0, -21.8, Math.PI / 2, 0x2563eb, 0x38bdf8, 8.0, 'x', 1);
 addHighwayCar(8.0, -21.8, Math.PI / 2, 0x3b82f6, 0x93c5fd, 8.0, 'x', 1);
 addHighwayCar(28.0, -26.2, -Math.PI / 2, 0x7c3aed, 0xc084fc, 7.6, 'x', -1);
 
-// 公路 Z = +24（3 辆）
 addHighwayCar(-28.0, 21.8, Math.PI / 2, 0x0ea5e9, 0x7dd3fc, 8.2, 'x', 1);
 addHighwayCar(-4.0, 26.2, -Math.PI / 2, 0x8b5cf6, 0xddd6fe, 7.8, 'x', -1);
 addHighwayCar(30.0, 26.2, -Math.PI / 2, 0xe11d48, 0xfda4af, 7.8, 'x', -1);
 
-// 精简后的 3 辆破损报废车辆
 addWreckedCar(-6.8, 14.5, 0.35, 2);
 addWreckedCar(18.5, 5.5, -1.55, 1);
 addWreckedCar(-18.5, -14.5, 1.45, 0);
 
-// 4. 路边摆摊与广告牌
 addStreetStall(-6.5, 9.8, 0.12, 2);
 addStreetStall(6.5, -9.8, Math.PI + 0.12, 0);
 addStreetStall(-18.2, 12.5, Math.PI / 2, 1);
@@ -1279,7 +1270,6 @@ addStreetStall(18.2, -12.5, -Math.PI / 2, 3);
 addBillboard(-10.5, 5.2, -7.8, 0, 4.4, 1.6, 'HIGHWAY-01', 'TRAFFIC SIGNALS // 3 CARS/ROAD', '#0b162c', '#22d3ee', '#67e8f9');
 addBillboard(10.5, 5.2, 13.2, Math.PI, 4.4, 1.6, 'RUIN-DISTRICT', 'STAY MOBILE // WATCH SKY', '#26102c', '#f472b6', '#fbcfe8');
 
-// 5. 远景高楼群与外星母舰
 const skylineGroup = new THREE.Group();
 const towerCoords = [
   [-108, -96, 18, 56, 18, 0], [-74, -114, 20, 70, 20, 1],
@@ -1312,7 +1302,7 @@ skylineGroup.add(mothership);
 scene.add(skylineGroup);
 
 /* ============================================================
-   3B. 天空空战系统（无掉落与地面残骸堆积）
+   3B. 天空空战系统
 ============================================================ */
 const skyUfos = [];
 const humanJets = [];
@@ -1873,71 +1863,228 @@ camera.add(weaponPivot);
 scene.add(camera);
 
 /* ============================================================
-   5. 音效引擎 + 纯音乐赛博合成器（含武器切换音效）
+   5. 音效引擎 + 严禁多音乐并发调度器（默认子弹时间 + 100BPM 起步随时间/关卡加速）
 ============================================================ */
 const audio = {
   ctx: null,
-  bgmMaster: null,
-  bgmFilter: null,
+  master: null,
+  filter: null,
+  wetGain: null,
   bgmTimer: null,
+  bgmGeneration: 0,
+  lastTickMs: 0,
   step: 0,
-  bassNotes: [73.42, 73.42, 73.42, 73.42, 87.31, 87.31, 65.41, 65.41],
-  arpNotes: [293.66, 349.23, 440.00, 523.25, 587.33, 523.25, 440.00, 349.23,
-             329.63, 392.00, 493.88, 587.33, 659.25, 587.33, 493.88, 392.00],
-  padChords: [
-    [146.83, 220.00, 261.63],
-    [174.61, 220.00, 261.63],
-    [130.81, 196.00, 261.63],
-    [164.81, 246.94, 293.66]
+  currentMode: 'bullet_time',
+  activeVoices: new Map(), // 声部并发上限追踪，防止音轨堆叠嘈杂
+
+  // 连续插值状态
+  smoothBpm: 100,
+  smoothCutoff: 740,
+  smoothQ: 4.1,
+  smoothVol: 0.16,
+  smoothWet: 0.34,
+
+  // D小调 / 弗里吉亚暗黑赛博和声进行
+  chords: [
+    { root: 73.42,  notes: [146.83, 174.61, 220.00, 261.63] },
+    { root: 65.41,  notes: [130.81, 164.81, 196.00, 261.63] },
+    { root: 58.27,  notes: [116.54, 146.83, 174.61, 220.00] },
+    { root: 82.41,  notes: [164.81, 196.00, 220.00, 277.18] }
+  ],
+
+  bassPattern: [
+    1, 0, 1, 0, 1, 1, 0, 1,
+    1, 0, 1, 0, 1, 0, 1, 1
+  ],
+
+  arpLeadPattern: [
+    587.33, 698.46, 880.00, 698.46, 1046.50, 880.00, 698.46, 587.33,
+    523.25, 659.25, 783.99, 659.25, 987.77,  783.99, 659.25, 523.25
+  ],
+
+  arpCounterPattern: [
+    293.66, 440.00, 587.33, 440.00, 349.23, 523.25, 698.46, 523.25,
+    261.63, 392.00, 523.25, 392.00, 329.63, 493.88, 659.25, 493.88
   ],
 
   init() {
     if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
       this.setupBGMGraph();
     }
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
+    // 严格单例启动：先停止已有调度器，再启动唯一主循环
+    this.stopBGM();
     this.startBGM();
   },
 
+  stopBGM() {
+    this.bgmGeneration++;
+    if (this.bgmTimer !== null) {
+      clearTimeout(this.bgmTimer);
+      this.bgmTimer = null;
+    }
+  },
+
+  // 声部并发控制：同一声部同时发声超过上限时停止最早节点，避免多音轨叠加嘈杂
+  trackVoice(channel, nodes, maxVoices, stopAtSec) {
+    if (!this.activeVoices.has(channel)) {
+      this.activeVoices.set(channel, []);
+    }
+    const list = this.activeVoices.get(channel);
+    while (list.length >= maxVoices) {
+      const oldest = list.shift();
+      if (oldest) {
+        try {
+          oldest.gain.gain.cancelScheduledValues(this.ctx.currentTime);
+          oldest.gain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.01);
+          if (oldest.stopFn) oldest.stopFn(this.ctx.currentTime + 0.04);
+        } catch (_) {}
+      }
+    }
+    const entry = {
+      gain: nodes.gain,
+      stopFn: nodes.stopFn || null,
+      endAt: stopAtSec
+    };
+    list.push(entry);
+
+    const now = this.ctx.currentTime;
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (list[i].endAt <= now) list.splice(i, 1);
+    }
+  },
+
   setupBGMGraph() {
-    this.bgmFilter = this.ctx.createBiquadFilter();
-    this.bgmFilter.type = 'lowpass';
-    this.bgmFilter.frequency.value = 1600;
-    this.bgmFilter.Q.value = 2.4;
+    this.filter = this.ctx.createBiquadFilter();
+    this.filter.type = 'lowpass';
+    this.filter.frequency.value = this.smoothCutoff;
+    this.filter.Q.value = this.smoothQ;
 
-    const delay = this.ctx.createDelay(0.6);
-    delay.delayTime.value = 0.24;
-    const feedback = this.ctx.createGain();
-    feedback.gain.value = 0.28;
-    const delayWet = this.ctx.createGain();
-    delayWet.gain.value = 0.22;
+    const delayL = this.ctx.createDelay(1.0);
+    const delayR = this.ctx.createDelay(1.0);
+    delayL.delayTime.value = 0.24;
+    delayR.delayTime.value = 0.36;
 
-    this.bgmFilter.connect(delay);
-    delay.connect(feedback);
-    feedback.connect(delay);
-    delay.connect(delayWet);
+    const fbL = this.ctx.createGain();
+    const fbR = this.ctx.createGain();
+    fbL.gain.value = 0.28;
+    fbR.gain.value = 0.25;
 
-    this.bgmMaster = this.ctx.createGain();
-    this.bgmMaster.gain.value = state.bgmMuted ? 0 : 0.16;
+    const merger = this.ctx.createChannelMerger(2);
+    this.wetGain = this.ctx.createGain();
+    this.wetGain.gain.value = this.smoothWet;
 
-    this.bgmFilter.connect(this.bgmMaster);
-    delayWet.connect(this.bgmMaster);
-    this.bgmMaster.connect(this.ctx.destination);
+    this.master = this.ctx.createGain();
+    this.master.gain.value = state.bgmMuted ? 0 : this.smoothVol;
+
+    this.filter.connect(this.master);
+
+    this.filter.connect(delayL);
+    delayL.connect(fbL);
+    fbL.connect(delayL);
+    delayL.connect(merger, 0, 0);
+
+    this.filter.connect(delayR);
+    delayR.connect(fbR);
+    fbR.connect(delayR);
+    delayR.connect(merger, 0, 1);
+
+    merger.connect(this.wetGain);
+    this.wetGain.connect(this.master);
+    this.master.connect(this.ctx.destination);
+  },
+
+  // 计算随时间与关卡递增的基准 BPM（从 100 起步）
+  computeProgressionBpm() {
+    const waveBonus = Math.max(0, (state.wave - 1)) * 4.5;
+    const timeBonus = (state.runElapsedSec / 60) * 2.5;
+    return Math.min(168, 100 + waveBonus + timeBonus);
+  },
+
+  // 游戏背景音乐默认设为子弹时间（bullet_time），仅在暂停/阵亡时降级
+  evaluateTargetMode() {
+    if (!state.started || state.paused) return 'standby';
+    if (state.gameOver) return 'gameover';
+    return 'bullet_time';
+  },
+
+  syncModeBadge(mode) {
+    const badge = document.getElementById('bgm-badge');
+    if (!badge) return;
+    badge.classList.remove('boss', 'slowmo', 'muted');
+    if (state.bgmMuted) {
+      badge.textContent = 'SYNTH BGM // MUTED [M]';
+      badge.classList.add('muted');
+      return;
+    }
+    const bpmText = Math.round(this.smoothBpm);
+    if (mode === 'standby') {
+      badge.textContent = `SYNTH BGM // STANDBY ${bpmText}BPM [M]`;
+    } else if (mode === 'gameover') {
+      badge.textContent = `SYNTH BGM // FADE ${bpmText}BPM [M]`;
+    } else {
+      const tag = state.bulletTime ? 'SLOW-MO' : 'BULLET-TIME';
+      badge.textContent = `SYNTH BGM // ${tag} ${bpmText}BPM [M]`;
+      badge.classList.add('slowmo');
+    }
+  },
+
+  // 每帧更新连续插值参数，实现丝滑过渡
+  updateSmoothTransition(rawDt) {
+    const targetMode = this.evaluateTargetMode();
+    if (targetMode !== this.currentMode) {
+      this.currentMode = targetMode;
+    }
+
+    const progBpm = this.computeProgressionBpm();
+    const slowExtraScale = state.bulletTime ? Math.max(0.68, state.timeScale * 1.35) : 1.0;
+
+    let targetBpm = progBpm * slowExtraScale;
+    let targetCutoff = state.bulletTime ? 540 : 780;
+    let targetQ = state.bulletTime ? 5.2 : 4.0;
+    let targetVol = 0.16;
+    let targetWet = state.bulletTime ? 0.42 : 0.34;
+
+    if (targetMode === 'standby') {
+      targetBpm = Math.max(96, progBpm * 0.92);
+      targetCutoff = 520;
+      targetQ = 3.2;
+      targetVol = 0.09;
+      targetWet = 0.36;
+    } else if (targetMode === 'gameover') {
+      targetBpm = 90;
+      targetCutoff = 420;
+      targetQ = 2.2;
+      targetVol = 0.04;
+      targetWet = 0.38;
+    }
+
+    const rate = Math.min(1, rawDt * 3.0);
+    this.smoothBpm += (targetBpm - this.smoothBpm) * rate;
+    this.smoothCutoff += (targetCutoff - this.smoothCutoff) * rate;
+    this.smoothQ += (targetQ - this.smoothQ) * rate;
+    const desiredVol = state.bgmMuted ? 0 : targetVol;
+    this.smoothVol += (desiredVol - this.smoothVol) * rate;
+    this.smoothWet += (targetWet - this.smoothWet) * rate;
+
+    this.syncModeBadge(targetMode);
+
+    if (this.ctx && this.filter && this.master && this.wetGain) {
+      const now = this.ctx.currentTime;
+      this.filter.frequency.setTargetAtTime(this.smoothCutoff, now, 0.06);
+      this.filter.Q.setTargetAtTime(this.smoothQ, now, 0.06);
+      this.wetGain.gain.setTargetAtTime(this.smoothWet, now, 0.08);
+      this.master.gain.setTargetAtTime(this.smoothVol, now, 0.07);
+    }
   },
 
   setMuted(muted) {
     state.bgmMuted = muted;
-    if (this.bgmMaster && this.ctx) {
-      this.bgmMaster.gain.setTargetAtTime(muted ? 0 : 0.16, this.ctx.currentTime, 0.05);
-    }
-    const badge = document.getElementById('bgm-badge');
-    if (badge) {
-      badge.textContent = muted ? 'SYNTH BGM // MUTED [M]' : 'SYNTH BGM // ON [M]';
-      badge.classList.toggle('muted', muted);
-    }
+    this.syncModeBadge(this.currentMode);
   },
 
   toggleMute() {
@@ -1948,132 +2095,180 @@ const audio = {
     const o = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     o.type = 'sine';
-    o.frequency.setValueAtTime(135, t);
-    o.frequency.exponentialRampToValueAtTime(34, t + 0.14);
-    g.gain.setValueAtTime(0.45, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-    o.connect(g); g.connect(this.bgmFilter);
-    o.start(t); o.stop(t + 0.17);
-  },
-
-  playHat(t, accent = false) {
-    const dur = accent ? 0.065 : 0.035;
-    const len = Math.floor(this.ctx.sampleRate * dur);
-    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
-    const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-    const hp = this.ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 6200;
-    const g = this.ctx.createGain();
-    g.gain.value = accent ? 0.11 : 0.05;
-    src.connect(hp); hp.connect(g); g.connect(this.bgmFilter);
-    src.start(t);
+    o.frequency.setValueAtTime(118, t);
+    o.frequency.exponentialRampToValueAtTime(34, t + 0.18);
+    g.gain.setValueAtTime(0.42, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.21);
+    o.connect(g); g.connect(this.filter);
+    this.trackVoice('kick', { gain: g, stopFn: endT => { try { o.stop(endT); } catch (_) {} } }, 2, t + 0.21);
+    o.start(t); o.stop(t + 0.22);
   },
 
   playSnare(t) {
-    const len = Math.floor(this.ctx.sampleRate * 0.12);
+    const len = Math.floor(this.ctx.sampleRate * 0.16);
     const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.8);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.5);
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
+
     const bp = this.ctx.createBiquadFilter();
     bp.type = 'bandpass';
-    bp.frequency.value = 1550;
+    bp.frequency.value = 1150;
+    bp.Q.value = 0.9;
+
     const g = this.ctx.createGain();
-    g.gain.value = 0.14;
-    src.connect(bp); bp.connect(g); g.connect(this.bgmFilter);
+    g.gain.setValueAtTime(0.14, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+
+    src.connect(bp); bp.connect(g); g.connect(this.filter);
+    this.trackVoice('snare', { gain: g, stopFn: endT => { try { src.stop(endT); } catch (_) {} } }, 2, t + 0.16);
     src.start(t);
   },
 
-  playBass(t, freq, stepLen) {
-    const o = this.ctx.createOscillator();
+  playHat(t, open = false) {
+    const dur = open ? 0.14 : 0.045;
+    const len = Math.floor(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, open ? 1.3 : 2.4);
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 4200;
+
+    const g = this.ctx.createGain();
+    g.gain.value = open ? 0.065 : 0.035;
+    src.connect(hp); hp.connect(g); g.connect(this.filter);
+    this.trackVoice('hat', { gain: g, stopFn: endT => { try { src.stop(endT); } catch (_) {} } }, 2, t + dur);
+    src.start(t);
+  },
+
+  playCyberBass(t, freq, dur) {
+    const saw = this.ctx.createOscillator();
+    saw.type = 'sawtooth';
+    saw.frequency.setValueAtTime(freq, t);
+
     const f = this.ctx.createBiquadFilter();
-    const g = this.ctx.createGain();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(freq, t);
     f.type = 'lowpass';
-    f.frequency.setValueAtTime(520, t);
-    f.frequency.exponentialRampToValueAtTime(140, t + stepLen * 0.9);
-    g.gain.setValueAtTime(0.24, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + stepLen * 0.92);
-    o.connect(f); f.connect(g); g.connect(this.bgmFilter);
-    o.start(t); o.stop(t + stepLen);
+    f.frequency.setValueAtTime(460, t);
+    f.frequency.exponentialRampToValueAtTime(115, t + dur * 0.95);
+    f.Q.value = 3.8;
+
+    const outGain = this.ctx.createGain();
+    outGain.gain.setValueAtTime(0.24, t);
+    outGain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.98);
+
+    saw.connect(f);
+    f.connect(outGain);
+    outGain.connect(this.filter);
+
+    this.trackVoice('bass', {
+      gain: outGain,
+      stopFn: endT => { try { saw.stop(endT); } catch (_) {} }
+    }, 2, t + dur);
+    saw.start(t);
+    saw.stop(t + dur);
   },
 
-  playArp(t, freq, stepLen) {
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(0.085, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + stepLen * 0.85);
-    o.connect(g); g.connect(this.bgmFilter);
-    o.start(t); o.stop(t + stepLen * 0.9);
+  playStereoArp(t, freqLead, freqSub, dur) {
+    const o1 = this.ctx.createOscillator();
+    o1.type = 'triangle';
+    o1.frequency.setValueAtTime(freqLead * 0.5, t);
+    const lp1 = this.ctx.createBiquadFilter();
+    lp1.type = 'lowpass';
+    lp1.frequency.value = 920;
+    const g1 = this.ctx.createGain();
+    g1.gain.setValueAtTime(0.055, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.92);
+    o1.connect(lp1); lp1.connect(g1); g1.connect(this.filter);
+
+    this.trackVoice('arp', {
+      gain: g1,
+      stopFn: endT => { try { o1.stop(endT); } catch (_) {} }
+    }, 3, t + dur);
+    o1.start(t); o1.stop(t + dur);
   },
 
-  playPadChord(t, chord, dur) {
-    chord.forEach(freq => {
+  playPad(t, freqs, dur) {
+    freqs.slice(0, 3).forEach(f => {
       const o = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
       o.type = 'sine';
-      o.frequency.setValueAtTime(freq, t);
+      o.frequency.setValueAtTime(f, t);
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 560;
+      const g = this.ctx.createGain();
       g.gain.setValueAtTime(0.001, t);
-      g.gain.linearRampToValueAtTime(0.045, t + dur * 0.25);
+      g.gain.linearRampToValueAtTime(0.028, t + dur * 0.3);
       g.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.98);
-      o.connect(g); g.connect(this.bgmFilter);
+      o.connect(lp); lp.connect(g); g.connect(this.filter);
+      this.trackVoice('pad', {
+        gain: g,
+        stopFn: endT => { try { o.stop(endT); } catch (_) {} }
+      }, 4, t + dur);
       o.start(t); o.stop(t + dur);
     });
   },
 
   startBGM() {
-    if (!this.ctx || this.bgmTimer) return;
-    const scheduleTick = () => {
-      this.bgmTimer = setTimeout(scheduleTick, 125);
-      if (!this.ctx || state.bgmMuted) return;
+    if (!this.ctx) return;
+    this.stopBGM();
+    const myGen = this.bgmGeneration;
+    this.lastTickMs = performance.now();
 
-      const activeCombat = state.started && !state.gameOver && !state.paused;
-      const slowFactor = state.bulletTime ? 1.65 : 1.0;
-      const t = this.ctx.currentTime + 0.02;
+    const stepLoop = () => {
+      if (myGen !== this.bgmGeneration) return;
 
-      const targetCutoff = !activeCombat ? 550 : (state.bulletTime ? 750 : 1850);
-      this.bgmFilter.frequency.setTargetAtTime(targetCutoff, t, 0.08);
+      const nowMs = performance.now();
+      const elapsedSec = Math.min(0.2, Math.max(0.001, (nowMs - this.lastTickMs) / 1000));
+      this.lastTickMs = nowMs;
+      this.updateSmoothTransition(elapsedSec);
 
-      const targetVol = state.gameOver ? 0.03 : (!activeCombat ? 0.08 : 0.16);
-      this.bgmMaster.gain.setTargetAtTime(targetVol, t, 0.1);
+      const mode = this.currentMode;
+      const effectiveBpm = Math.max(70, this.smoothBpm);
+      const stepDur = 60 / effectiveBpm / 4;
 
-      const s = this.step;
-      const stepDur = 0.125 * slowFactor;
+      if (!state.bgmMuted && this.smoothVol > 0.002 && this.ctx.state === 'running' && mode !== 'standby') {
+        const t = this.ctx.currentTime + 0.025;
+        const s = this.step;
+        const barIdx = Math.floor(s / 16) % this.chords.length;
+        const stepInBar = s % 16;
+        const chord = this.chords[barIdx];
 
-      if (s % 16 === 0) {
-        const chordIdx = Math.floor(s / 16) % this.padChords.length;
-        this.playPadChord(t, this.padChords[chordIdx], stepDur * 16);
+        if (stepInBar === 0) {
+          this.playPad(t, chord.notes, stepDur * 16);
+        }
+
+        if (mode !== 'gameover') {
+          if (stepInBar % 4 === 0) this.playKick(t);
+          if (stepInBar % 8 === 4) this.playSnare(t);
+          if (stepInBar % 4 === 2) this.playHat(t, stepInBar === 14);
+        }
+
+        if (this.bassPattern[stepInBar]) {
+          const bassFreq = (stepInBar === 14 || stepInBar === 15) ? chord.root * 1.5 : chord.root;
+          const bFreq = mode === 'gameover' ? bassFreq * 0.5 : bassFreq;
+          this.playCyberBass(t, bFreq, stepDur * 1.5);
+        }
+
+        const leadFreq = this.arpLeadPattern[(barIdx * 8 + (stepInBar % 8)) % this.arpLeadPattern.length];
+        const subFreq = this.arpCounterPattern[(barIdx * 8 + (stepInBar % 8)) % this.arpCounterPattern.length];
+        if (mode === 'bullet_time' && stepInBar % 2 === 0) {
+          this.playStereoArp(t, leadFreq, subFreq, stepDur * 1.4);
+        }
+
+        this.step = (this.step + 1) % 64;
       }
 
-      if (activeCombat) {
-        if (s % 4 === 0) this.playKick(t);
-        if (s % 8 === 4) this.playSnare(t);
-        if (s % 2 === 1) this.playHat(t, s % 4 === 3);
-
-        const bFreq = this.bassNotes[s % this.bassNotes.length];
-        this.playBass(t, bFreq, stepDur);
-
-        if (s % 2 === 0 || state.wave >= 2) {
-          const aFreq = this.arpNotes[s % this.arpNotes.length];
-          this.playArp(t, aFreq, stepDur);
-        }
-      } else {
-        if (s % 4 === 0) {
-          this.playBass(t, this.bassNotes[s % this.bassNotes.length] * 0.5, stepDur * 3);
-        }
+      if (myGen === this.bgmGeneration) {
+        this.bgmTimer = setTimeout(stepLoop, Math.max(25, stepDur * 1000));
       }
-
-      this.step = (this.step + 1) % 64;
     };
-    scheduleTick();
+
+    stepLoop();
   },
 
   switchWeaponSound() {
@@ -2339,7 +2534,6 @@ function createEnemyEntity(isBoss = false) {
   g.position.set(x, 0, z);
 
   const level = currentWave + (isBoss ? 4 : (type === 1 ? 2 : (type === 2 ? 1 : 0)));
-  // 8. 越往后面关卡外星人移动速度越快
   const waveSpeedBoost = (currentWave - 1) * 0.58;
   const baseSpeed = isBoss ? 3.5 : (type === 1 ? 3.2 : (type === 0 ? 4.5 : 3.8));
   const chaseSpeed = baseSpeed + waveSpeedBoost + (level - 1) * 0.22;
@@ -2393,7 +2587,6 @@ function spawnBoss() {
   createEnemyEntity(true);
 }
 
-// 5. 开枪吸引附近外星人过来搜寻
 function alertEnemiesByGunshot(shotPos) {
   const hearRadius = gear.silencer ? 14 : 46;
   for (const e of enemies) {
@@ -2405,7 +2598,6 @@ function alertEnemiesByGunshot(shotPos) {
   }
 }
 
-// 6. 击杀大 BOSS 获得随机装备（跨波次使用，重开消失）
 function grantRandomBossGear() {
   const pool = ['extMag', 'upgrade', 'silencer', 'scope'];
   const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -2552,7 +2744,6 @@ function hasCarAhead(hc) {
   return false;
 }
 
-// 3. 车辆直接开出边界后再消失（随后从对面边界外重新驶入，保持车道车流）
 function updateHighwayCars(dt) {
   if (dt <= 0) return;
   const nowSec = performance.now() * 0.001;
@@ -2634,7 +2825,6 @@ function detonateBarrel(barrel) {
 const raycaster = new THREE.Raycaster();
 const losRaycaster = new THREE.Raycaster();
 
-// 7. 让外星人视力好一点：玩家能看见他时他就能看见我
 function isPlayerSeeingEnemy(enemy) {
   const targetPos = enemy.position.clone().setY(1.35);
   const toEnemy = new THREE.Vector3().subVectors(targetPos, camera.position);
@@ -2832,7 +3022,6 @@ function hurtPlayer(dmg) {
   updateHUD();
 }
 
-// 9. 武器切换音效
 function switchWeapon(idx) {
   if (idx === state.weaponIdx || idx < 0 || idx >= WEAPONS.length) return;
   state.weaponIdx = idx;
@@ -2877,7 +3066,7 @@ function updateWave(dt) {
       state.wave++;
       state.waveBreak = 2.8;
       state.enemiesToSpawn = 7 + state.wave * 3;
-      state.bossToSpawn = true; // 6. 每局刷新一个大 BOSS
+      state.bossToSpawn = true;
       state.spawnTimer = 0;
       const wStr = String(state.wave).padStart(2, '0');
       showBanner('WAVE ' + wStr, getStageTitle(state.wave));
@@ -2971,7 +3160,10 @@ document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('hud').classList.add('active');
 });
 
-document.getElementById('restart-btn').addEventListener('click', () => location.reload());
+document.getElementById('restart-btn').addEventListener('click', () => {
+  audio.stopBGM();
+  location.reload();
+});
 
 function addKillFeed(text, isHeadshot = false, isBoss = false) {
   const feed = document.getElementById('kill-feed');
@@ -3277,7 +3469,6 @@ function updateEnemies(dt) {
         enemyBullets.push(b);
       }
     } else if (ud.searchTarget && ud.searchTimer > 0 && !state.gameOver) {
-      // 5. 听见枪声往开枪地方靠近搜寻
       ud.searchTimer -= dt;
       const toShot = new THREE.Vector3().subVectors(ud.searchTarget, enemy.position);
       toShot.y = 0;
@@ -3394,6 +3585,7 @@ function loop() {
   const worldDt = rawDt * state.timeScale;
 
   if (state.started && !state.gameOver && !state.paused) {
+    state.runElapsedSec += rawDt;
     updatePlayer(rawDt);
     updateEnemies(worldDt);
     updateEnemyBullets(worldDt);
@@ -3402,6 +3594,8 @@ function loop() {
     updateRadar();
     if (mouseDown) shoot();
   }
+
+  audio.updateSmoothTransition(rawDt);
 
   updateHighwayCars(worldDt);
   updateSkyDogfight(worldDt);
@@ -3428,6 +3622,7 @@ window.addEventListener('resize', () => {
 
 renderGearBar();
 updateHUD();
+audio.syncModeBadge(audio.evaluateTargetMode());
 </script>
 </body>
 </html>
